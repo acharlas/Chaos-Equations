@@ -1,0 +1,5 @@
+? sphere autour des equations pour cliquer dessus ? 
+
+-Halvorsen: sphere 17r
+
+-Color: if (dxyz - xyz >>> = fast then color change)
