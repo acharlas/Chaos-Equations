@@ -1,13 +1,18 @@
-FROM node:alpine3.16
+FROM node:22.10.0-alpine
+
+# Set working directory inside the container
 WORKDIR /app
-ENV PATH /app/node_modules/.bin:$PATH
 
-# Install dependencies only first
-COPY ./react/package.json ./
-RUN npm install
+# Copy package files and install dependencies
+COPY package.json .
 
-# Install the rest
-COPY ./react ./
-RUN npm install
+RUN npm install -verbose --no-audit
 
-CMD ["npm", "start"]
+# Copy the rest of the application code
+COPY . .
+
+# Expose port 3000 for the Vite development server
+EXPOSE 3000
+
+# Start the Vite development server
+CMD ["npm", "run", "dev"]
