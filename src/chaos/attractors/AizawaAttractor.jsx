@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { folder, useControls, button } from "leva";
 import ChaosManager from "../ChaosManager";
-import { LorenzEquation } from "../equations/LorenzEquation";
 import AttractorWrapper from "./AttractorWrapper";
+
 import * as THREE from "three";
 import { commonAttractorControls } from "../controls/SharedControls";
+import { AizawaEquation } from "../equations/AizawaEquation";
 
-const LorenzAttractor = () => {
+const AizawaAttractor = () => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -14,10 +15,13 @@ const LorenzAttractor = () => {
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Lorenz: folder({
-      a: { value: 10, min: 5, max: 15, step: 0.5 },
-      b: { value: 28, min: 20, max: 40, step: 1 },
-      c: { value: 8 / 3, min: 2, max: 5, step: 0.1 },
+    MyChaos: folder({
+      a: { value: 0.95, min: 0, max: 2, step: 0.01 },
+      b: { value: 0.7, min: 0, max: 2, step: 0.01 },
+      c: { value: 0.6, min: 0, max: 2, step: 0.01 },
+      d: { value: 3.5, min: 0, max: 10, step: 0.1 },
+      e: { value: 0.25, min: 0, max: 1, step: 0.01 },
+      f: { value: 0.1, min: 0, max: 1, step: 0.01 },
     }),
   });
 
@@ -25,6 +29,9 @@ const LorenzAttractor = () => {
     a,
     b,
     c,
+    d,
+    e,
+    f,
     dt,
     Npoints,
     trailLength,
@@ -43,8 +50,7 @@ const LorenzAttractor = () => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    const { dx, dy, dz } = LorenzEquation(x, y, z, dtLocal, { a, b, c });
-    return [dx, dy, dz];
+    return AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f });
   };
 
   return (
@@ -63,4 +69,4 @@ const LorenzAttractor = () => {
   );
 };
 
-export default LorenzAttractor;
+export default AizawaAttractor;

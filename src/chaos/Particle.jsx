@@ -1,93 +1,108 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+
+// Helper to ensure we have a THREE.Color from the provided value.
+const toTHREEColor = (col) => {
+  return col instanceof THREE.Color ? col : new THREE.Color(col);
+};
 
 const Particle = ({
   initialPosition,
   dt,
   trailLength,
+  equation,
   lowSpeedColor,
   highSpeedColor,
-  equation,
-  sphereSize = 0.1,
+  sphereSize = 0.05,
   freeze = false,
   restartTrigger,
 }) => {
   const meshRef = useRef();
-  const [trail, setTrail] = useState([initialPosition]);
+  // Store the trail as an array of positions (each is [x, y, z])
+  const trail = useRef([initialPosition]);
 
-  // When restartTrigger changes, reset particle position and trail.
+  // Pre-allocate buffers for positions and colors.
+  const positionsBuffer = useRef(new Float32Array(trailLength * 3));
+  const colorsBuffer = useRef(new Float32Array(trailLength * 3));
+
+  // Create a BufferGeometry for the trail line.
+  const geometryRef = useRef(new THREE.BufferGeometry());
+  
+  // On restart, reset the particle's position and trail.
   useEffect(() => {
     if (meshRef.current) {
       meshRef.current.position.set(...initialPosition);
-      setTrail([initialPosition]);
+      trail.current = [initialPosition];
+      positionsBuffer.current = new Float32Array(trailLength * 3);
+      colorsBuffer.current = new Float32Array(trailLength * 3);
+      geometryRef.current.setAttribute(
+        "position",
+        new THREE.BufferAttribute(positionsBuffer.current, 3)
+      );
+      geometryRef.current.setAttribute(
+        "color",
+        new THREE.BufferAttribute(colorsBuffer.current, 3)
+      );
+      geometryRef.current.setDrawRange(0, 0);
     }
-  }, [restartTrigger, initialPosition]);
+  }, [restartTrigger, initialPosition, trailLength]);
 
   useFrame(() => {
-    if (freeze) return; // Skip updates if frozen.
+    if (freeze) return;
     const pos = meshRef.current.position;
     const [dx, dy, dz] = equation(pos.x, pos.y, pos.z, dt);
     const newPos = [pos.x + dx, pos.y + dy, pos.z + dz];
     meshRef.current.position.set(...newPos);
-    setTrail((prev) => {
-      const newTrail = [...prev, newPos];
-      return newTrail.length > trailLength
-        ? newTrail.slice(newTrail.length - trailLength)
-        : newTrail;
-    });
+
+    // Append new position; keep trail length fixed.
+    trail.current.push(newPos);
+    if (trail.current.length > trailLength) {
+      trail.current.shift();
+    }
+    const n = trail.current.length;
+    geometryRef.current.setDrawRange(0, n);
+
+    // Update positions buffer in place.
+    for (let i = 0; i < n; i++) {
+      positionsBuffer.current[i * 3] = trail.current[i][0];
+      positionsBuffer.current[i * 3 + 1] = trail.current[i][1];
+      positionsBuffer.current[i * 3 + 2] = trail.current[i][2];
+    }
+    geometryRef.current.attributes.position.needsUpdate = true;
+
+    // Ensure colors are THREE.Color objects.
+    const lowCol = toTHREEColor(lowSpeedColor);
+    const highCol = toTHREEColor(highSpeedColor);
+
+    // Compute color for each point.
+    for (let i = 0; i < n; i++) {
+      // Calculate t based on the index (oldest=0, tip=1).
+      const t = n > 1 ? i / (n - 1) : 0;
+      // For a speed-based gradient, you could compute t based on speed,
+      // but here we use an index-based gradient. You can mix in speed if desired.
+      const col = lowCol.clone().lerp(highCol, t);
+      colorsBuffer.current[i * 3] = col.r;
+      colorsBuffer.current[i * 3 + 1] = col.g;
+      colorsBuffer.current[i * 3 + 2] = col.b;
+    }
+    geometryRef.current.attributes.color.needsUpdate = true;
   });
-
-  // Compute a smooth gradient based on the index (oldest=lowSpeedColor, tip=highSpeedColor).
-  const n = trail.length;
-  const trailColors = [];
-  for (let i = 0; i < n; i++) {
-    let t = n > 1 ? i / (n - 1) : 0;
-    const col = lowSpeedColor.clone().lerp(highSpeedColor, t);
-    trailColors.push(col);
-  }
-
-  // CustomLine renders the trail as a line with vertex colors.
-  const CustomLine = ({ points, colors }) => {
-    const lineRef = useRef();
-    useFrame(() => {
-      if (lineRef.current) {
-        const positions = new Float32Array(points.flat());
-        lineRef.current.geometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(positions, 3)
-        );
-        const colorArray = new Float32Array(
-          colors.flatMap((c) => [c.r, c.g, c.b])
-        );
-        lineRef.current.geometry.setAttribute(
-          "color",
-          new THREE.BufferAttribute(colorArray, 3)
-        );
-        lineRef.current.geometry.attributes.position.needsUpdate = true;
-        lineRef.current.geometry.attributes.color.needsUpdate = true;
-      }
-    });
-    return (
-      <line ref={lineRef}>
-        <bufferGeometry />
-        <lineBasicMaterial vertexColors={true} linewidth={2} />
-      </line>
-    );
-  };
 
   return (
     <>
       <mesh ref={meshRef} position={initialPosition}>
         <sphereGeometry args={[sphereSize, 16, 16]} />
         <meshBasicMaterial
-          color="white"
+          color={highSpeedColor}
           transparent={true}
           opacity={1}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
-      {trail.length >= 2 && <CustomLine points={trail} colors={trailColors} />}
+      <line geometry={geometryRef.current}>
+        <lineBasicMaterial vertexColors={true} linewidth={2} />
+      </line>
     </>
   );
 };

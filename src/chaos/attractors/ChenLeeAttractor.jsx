@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { folder, useControls, button } from "leva";
 import ChaosManager from "../ChaosManager";
-import { LorenzEquation } from "../equations/LorenzEquation";
 import AttractorWrapper from "./AttractorWrapper";
+import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
 import { commonAttractorControls } from "../controls/SharedControls";
 
-const LorenzAttractor = () => {
+const ChenLeeAttractor = () => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -14,10 +14,10 @@ const LorenzAttractor = () => {
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Lorenz: folder({
-      a: { value: 10, min: 5, max: 15, step: 0.5 },
-      b: { value: 28, min: 20, max: 40, step: 1 },
-      c: { value: 8 / 3, min: 2, max: 5, step: 0.1 },
+    ChenLee: folder({
+      a: { value: 5, min: -20, max: 20, step: 0.1 },
+      b: { value: -10, min: -20, max: 20, step: 0.1 },
+      c: { value: -0.38, min: -1, max: 1, step: 0.01 },
     }),
   });
 
@@ -43,8 +43,7 @@ const LorenzAttractor = () => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    const { dx, dy, dz } = LorenzEquation(x, y, z, dtLocal, { a, b, c });
-    return [dx, dy, dz];
+    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
   };
 
   return (
@@ -63,4 +62,4 @@ const LorenzAttractor = () => {
   );
 };
 
-export default LorenzAttractor;
+export default ChenLeeAttractor;
