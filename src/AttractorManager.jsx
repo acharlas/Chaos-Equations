@@ -4,6 +4,7 @@ import HalvorsenAttractor from "./chaos/attractors/HalvorsenAttractor";
 import LorenzAttractor from "./chaos/attractors/LorenzAttractor";
 import AizawaAttractor from "./chaos/attractors/AizawaAttractor";
 import ChenLeeAttractor from "./chaos/attractors/ChenLeeAttractor";
+import ThomasAttractor from "./chaos/attractors/ThomasAttractor";
 
 const AttractorManager = () => {
   const { attractor } = useControls({
@@ -13,7 +14,8 @@ const AttractorManager = () => {
         Halvorsen: "Halvorsen",
         Lorenz: "Lorenz",
         Aizawa: "Aizawa",
-        Chen_Lee: "Chen-Lee",
+        ChenLee: "ChenLee",
+        Thomas: "Thomas",
       },
     },
   });
@@ -23,7 +25,8 @@ const AttractorManager = () => {
       {attractor === "Halvorsen" && <HalvorsenAttractor />}
       {attractor === "Lorenz" && <LorenzAttractor />}
       {attractor === "Aizawa" && <AizawaAttractor />}
-      {attractor === "Chen-Lee" && <ChenLeeAttractor />}
+      {attractor === "ChenLee" && <ChenLeeAttractor />}
+      {attractor === "Thomas" && <ThomasAttractor />} {/* Render Thomas */}
     </>
   );
 };
