@@ -1,5 +1,5 @@
 export const commonAttractorControls = {
-  Npoints: { value: 150, min: 1, max: 1000, step: 1 },
+  Npoints: { value: 250, min: 1, max: 1000, step: 1 },
   trailLength: { value: 150, min: 10, max: 300, step: 10 },
   lowSpeedHex: { value: "#0000ff" },
   highSpeedHex: { value: "#ff0000" },

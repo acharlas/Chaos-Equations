@@ -16,7 +16,7 @@ const ChenLeeAttractor = () => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
     ChenLee: folder({
       a: { value: 0.9, min: -20, max: 20, step: 0.1 },
-      b: { value: -10, min: -20, max: 20, step: 0.1 },
+      b: { value: -3, min: -20, max: 20, step: 0.1 },
       c: { value: -0.38, min: -1, max: 1, step: 0.01 },
     }),
   });

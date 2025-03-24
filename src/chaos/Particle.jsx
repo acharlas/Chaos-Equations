@@ -28,7 +28,7 @@ const Particle = ({
 
   // Create a BufferGeometry for the trail line.
   const geometryRef = useRef(new THREE.BufferGeometry());
-  
+
   // On restart, reset the particle's position and trail.
   useEffect(() => {
     if (meshRef.current) {
