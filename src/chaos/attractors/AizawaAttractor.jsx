@@ -15,7 +15,7 @@ const AizawaAttractor = () => {
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    MyChaos: folder({
+    Aizawa: folder({
       a: { value: 0.95, min: 0, max: 2, step: 0.01 },
       b: { value: 0.7, min: 0, max: 2, step: 0.01 },
       c: { value: 0.6, min: 0, max: 2, step: 0.01 },
