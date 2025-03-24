@@ -11,14 +11,17 @@ const LorenzAttractor = () => {
   const [restartTrigger, setRestartTrigger] = useState(0);
 
   const params = useControls({
+    Lorenz: folder(
+      {
+        a: { value: 10, min: 5, max: 15, step: 0.5 },
+        b: { value: 28, min: 20, max: 40, step: 1 },
+        c: { value: 8 / 3, min: 2, max: 5, step: 0.1 },
+      },
+      { order: -1 }
+    ),
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Lorenz: folder({
-      a: { value: 10, min: 5, max: 15, step: 0.5 },
-      b: { value: 28, min: 20, max: 40, step: 1 },
-      c: { value: 8 / 3, min: 2, max: 5, step: 0.1 },
-    }),
   });
 
   const {

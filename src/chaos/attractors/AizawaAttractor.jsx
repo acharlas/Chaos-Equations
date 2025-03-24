@@ -12,17 +12,20 @@ const AizawaAttractor = () => {
   const [restartTrigger, setRestartTrigger] = useState(0);
 
   const params = useControls({
+    Aizawa: folder(
+      {
+        a: { value: 0.95, min: 0, max: 2, step: 0.01 },
+        b: { value: 0.7, min: 0, max: 2, step: 0.01 },
+        c: { value: 0.6, min: 0, max: 2, step: 0.01 },
+        d: { value: 3.5, min: 0, max: 10, step: 0.1 },
+        e: { value: 0.25, min: 0, max: 1, step: 0.01 },
+        f: { value: 0.1, min: 0, max: 1, step: 0.01 },
+      },
+      { order: -1 }
+    ),
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Aizawa: folder({
-      a: { value: 0.95, min: 0, max: 2, step: 0.01 },
-      b: { value: 0.7, min: 0, max: 2, step: 0.01 },
-      c: { value: 0.6, min: 0, max: 2, step: 0.01 },
-      d: { value: 3.5, min: 0, max: 10, step: 0.1 },
-      e: { value: 0.25, min: 0, max: 1, step: 0.01 },
-      f: { value: 0.1, min: 0, max: 1, step: 0.01 },
-    }),
   });
 
   const {

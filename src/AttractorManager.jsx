@@ -17,6 +17,7 @@ const AttractorManager = () => {
         ChenLee: "ChenLee",
         Thomas: "Thomas",
       },
+      order: -2,
     },
   });
 

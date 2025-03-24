@@ -11,12 +11,15 @@ const ThomasAttractor = () => {
   const [restartTrigger, setRestartTrigger] = useState(0);
 
   const params = useControls({
+    Thomas: folder(
+      {
+        b: { value: 0.19, min: 0, max: 0.3, step: 0.01 },
+      },
+      { order: -1 }
+    ),
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Thomas: folder({
-      b: { value: 0.19, min: 0, max: 0.3, step: 0.01 },
-    }),
   });
 
   const {

@@ -11,12 +11,15 @@ const HalvorsenAttractor = () => {
   const [restartTrigger, setRestartTrigger] = useState(0);
 
   const params = useControls({
+    Halvorsen: folder(
+      {
+        a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
+      },
+      { order: -1 }
+    ),
     ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
-    Halvorsen: folder({
-      a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
-    }),
   });
 
   const {
