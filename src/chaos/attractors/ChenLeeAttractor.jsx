@@ -15,7 +15,7 @@ const ChenLeeAttractor = () => {
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
     ChenLee: folder({
-      a: { value: 5, min: -20, max: 20, step: 0.1 },
+      a: { value: 0.9, min: -20, max: 20, step: 0.1 },
       b: { value: -10, min: -20, max: 20, step: 0.1 },
       c: { value: -0.38, min: -1, max: 1, step: 0.01 },
     }),
@@ -33,6 +33,7 @@ const ChenLeeAttractor = () => {
     globalScale,
   } = params;
 
+  // Convert color hex to THREE.Color
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
     [lowSpeedHex]

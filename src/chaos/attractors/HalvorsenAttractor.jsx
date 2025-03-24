@@ -15,7 +15,7 @@ const HalvorsenAttractor = () => {
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
     Halvorsen: folder({
-      a: { value: 1.5, min: 1.4, max: 4, step: 0.05 },
+      a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
     }),
   });
 
