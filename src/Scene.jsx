@@ -18,10 +18,28 @@ const Scene = () => {
   const { bloom, bloom_threshold, bloom_strength, bloom_radius } = useControls({
     Bloom: folder(
       {
-        bloom: { value: false, label: "Bloom On" },
-        bloom_threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
-        bloom_strength: { value: 1.5, min: 0, max: 5, step: 0.01 },
-        bloom_radius: { value: 0.5, min: 0, max: 1.3, step: 0.01 },
+        bloom: { value: false, label: "On" },
+        bloom_threshold: {
+          value: 0.5,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: "threshold",
+        },
+        bloom_strength: {
+          value: 1.5,
+          min: 0,
+          max: 5,
+          step: 0.01,
+          label: "strength",
+        },
+        bloom_radius: {
+          value: 0.5,
+          min: 0,
+          max: 1.3,
+          step: 0.01,
+          label: "radius",
+        },
       },
       { order: 1, collapsed: true }
     ),
