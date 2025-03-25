@@ -38,7 +38,7 @@ const Scene = () => {
         far: 1000,
       }}
     >
-      <Stars />
+      <Stars radius={260} depth={1} />
       <Stats />
       <AttractorManager />
       {bloom && (
