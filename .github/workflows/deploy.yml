@@ -63,12 +63,7 @@ jobs:
         if: ${{ steps.detect-package-manager.outputs.manager == 'yarn' }}
 
       - name: Build
-        run: |
-          if [ "${{ steps.detect-package-manager.outputs.manager }}" == "yarn" ]; then
-            yarn build
-          else
-            npm run build
-          fi
+        run: yarn build
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
