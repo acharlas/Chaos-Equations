@@ -51,7 +51,7 @@ const Scene = () => {
       shadows
       gl={{ antialias: false }}
       camera={{
-        position: [-141.38865, -143.41807, -163.75726],
+        position: [-140, -140, -160],
         fov: 75,
         near: 0.01,
         far: 1000,
