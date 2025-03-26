@@ -1,12 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Canvas, extend } from "@react-three/fiber";
-import {
-  OrbitControls,
-  Stars,
-  Effects,
-  Stats,
-  BakeShadows,
-} from "@react-three/drei";
+import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
 import { folder, useControls, button } from "leva";
 import AttractorManager from "./AttractorManager";
@@ -16,14 +10,12 @@ import { getSceneControls } from "./controls/SceneControls";
 extend({ UnrealBloomPass });
 
 const Scene = () => {
-  // Destructure the controls returned by useControls.
   const Scene = useControls({
     Scene: folder(getSceneControls()),
   });
 
   const controlsRef = useRef();
 
-  // Build a shared params object
   const {
     Npoints,
     trailLength,
@@ -31,6 +23,7 @@ const Scene = () => {
     highSpeedHex,
     globalScale,
     dt,
+
     bloom,
     bloom_threshold,
     bloom_strength,
@@ -69,7 +62,6 @@ const Scene = () => {
           />
         </Effects>
       )}
-      <BakeShadows />
       <OrbitControls ref={controlsRef} />
       <CameraResetButton controlsRef={controlsRef} />
     </Canvas>
