@@ -1,4 +1,6 @@
-<img src="./screenshots/chaos-gif.gif" alt="gif home page"/>
+<p align="center">
+<img src="./screenshots/chaos-gif.gif" alt="gif home page" width="100%"/>
+</p>
 
 # Chaos Attractors Simulation
 
