@@ -1,50 +1,49 @@
+<img src="./screenshots/chaos-gif.gif" alt="gif home page"/>
+
 # Chaos Attractors Simulation
 
-This project refactors and modernizes an older codebase to simulate chaotic attractors using **react-three-fiber** and **Leva** controls. The code has been reorganized into modular components to improve maintainability and performance. The simulation features two main attractors – **Halvorsen** and **Lorenz** – each with its own dedicated equation, and a generic particle system that displays a smooth color gradient trail. Additionally, you can freeze the simulation or restart it from the beginning using Leva buttons.
+A modern simulation engine for chaotic attractors in your browser. Chaos‐Equations renders complex chaotic systems (like the Lorenz and Halvorsen attractors) using react‑three‑fiber and Leva controls, letting you explore chaos in real time.
 
-
-## Key Features
+## Features
 
 - **Modular Architecture:**  
-  Each attractor (Halvorsen and Lorenz) is implemented as a separate module. Shared components like `ChaosManager`, `Particle`, and `AttractorWrapper` help reduce code duplication and improve maintainability.
+  Each attractor is implemented as a separate module. Shared components like `ChaosManager`, `Particle`, and `AttractorWrapper` help reduce code duplication and improve maintainability.
 
 - **Dynamic Simulation Controls:**  
   Leva controls allow you to adjust simulation parameters (e.g., time step, number of particles, trail length, global scaling) in real-time. Two dedicated Leva buttons let you freeze the simulation and restart it from the beginning.
 
-- **Smooth Gradient Trails:**  
-  Particle trails are rendered with a smooth color gradient that transitions along the trail based solely on the index of each point, ensuring continuous color interpolation.
+- **Dynamic Simulation Controls::**  
+  Real‑time parameter adjustments via Leva controls allow you to tweak time steps, particle count, trail length, scaling, and more.
 
 - **Updated Camera Setup:**  
   The default camera parameters have been updated to use the logged values for position, field of view, near, and far, ensuring an optimal initial view of the simulation.
 
 - **Postprocessing Effects:**  
-  The project includes an UnrealBloomPass effect to enhance the glow of the attractor tips, making the visualization more vibrant.
+  Includes postprocessing effects (such as UnrealBloomPass) to produce a glowing, vibrant visualization of attractor tips.
 
+## Screenshots
 
+<p align="center">
+  <img src="./screenshots/Thomas-chaos.png" alt="thomas chaos" width="30%" style="margin: 10px;"/>
+  <img src="./screenshots/default.png" alt="default" width="30%" style="margin: 10px;"/>
+  <img src="./screenshots/Lorenz-chaos.png" alt="Lorenz chaos" width="30%" style="margin: 10px;"/>
+</p>
 
-## Getting Started
+## Installation
 
-1. **Install Dependencies:**
+1. **Clone the repository:**
 
-   Run the following command in the project directory:
-   
    ```sh
-   npm install
+   git clone https://github.com/acharlas/Chaos-Equations.git cd Chaos-Equations
    ```
-   
-2. **Run the Project:**
 
-   Start the development server with:
-   
+2. **Build and run with Docker Compose:**
+
    ```sh
-   npm start
+   docker-compose up --build
    ```
-   
-3. **Interact with the Simulation:**
 
-   - Use the Leva panel to adjust simulation parameters.
-   - Use the freeze and restart buttons in the Leva panel to control the simulation flow.
-   - Orbit controls allow you to navigate the 3D scene.
+Open your browser and navigate to http://localhost:3000 to see the simulation.
 
 ## Project Overview
 
@@ -59,6 +58,5 @@ This project refactors and modernizes an older codebase to simulate chaotic attr
 
 - **AttractorWrapper:**  
   Wraps attractor components in a Three.js group that applies a global scaling factor.
-
 
 Feel free to explore and tweak the controls in the Leva panel to see how different parameters affect the simulation. Enjoy your chaotic visualizations!
