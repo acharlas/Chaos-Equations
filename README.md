@@ -36,7 +36,8 @@ A modern simulation engine for chaotic attractors in your browser. Chaos‐Equat
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/acharlas/Chaos-Equations.git cd Chaos-Equations
+   git clone https://github.com/acharlas/Chaos-Equations.git
+   cd Chaos-Equations
    ```
 
 2. **Build and run with Docker Compose:**
