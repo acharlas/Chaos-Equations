@@ -4,9 +4,8 @@ import ChaosManager from "../ChaosManager";
 import AttractorWrapper from "./AttractorWrapper";
 import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
-import { commonAttractorControls } from "../controls/SharedControls";
 
-const ChenLeeAttractor = () => {
+const ChenLeeAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -19,22 +18,13 @@ const ChenLeeAttractor = () => {
       },
       { order: -1 }
     ),
-    ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
+  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+    sharedParams;
 
-  const {
-    a,
-    b,
-    c,
-    dt,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-  } = params;
+  const { a, b, c } = params;
 
   // Convert color hex to THREE.Color
   const lowSpeedColor = useMemo(

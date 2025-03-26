@@ -2,16 +2,14 @@ import React, { useState, useMemo } from "react";
 import { folder, useControls, button } from "leva";
 import ChaosManager from "../ChaosManager";
 import AttractorWrapper from "./AttractorWrapper";
-
 import * as THREE from "three";
-import { commonAttractorControls } from "../controls/SharedControls";
 import { AizawaEquation } from "../equations/AizawaEquation";
 
-const AizawaAttractor = () => {
+const AizawaAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const params = useControls({
+  const { a, b, c, d, e, f } = useControls({
     Aizawa: folder(
       {
         a: { value: 0.95, min: 0, max: 2, step: 0.01 },
@@ -23,25 +21,12 @@ const AizawaAttractor = () => {
       },
       { order: -1 }
     ),
-    ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    a,
-    b,
-    c,
-    d,
-    e,
-    f,
-    dt,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-  } = params;
+  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+    sharedParams;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
