@@ -6,6 +6,7 @@ import {
   Effects,
   Stats,
   BakeShadows,
+  Hud,
 } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
 import { folder, useControls } from "leva";
@@ -59,6 +60,7 @@ const Scene = () => {
       <Stars radius={260} depth={1} />
       <Stats />
       <AttractorManager />
+
       {bloom && (
         <Effects disableGamma>
           <unrealBloomPass
@@ -68,7 +70,6 @@ const Scene = () => {
           />
         </Effects>
       )}
-      <BakeShadows />
       <OrbitControls />
     </Canvas>
   );
