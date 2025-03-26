@@ -1,21 +1,14 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Canvas, extend } from "@react-three/fiber";
-import {
-  OrbitControls,
-  Stars,
-  Effects,
-  Stats,
-  BakeShadows,
-  Hud,
-} from "@react-three/drei";
+import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
 import { folder, useControls } from "leva";
 import AttractorManager from "./AttractorManager";
+import CameraResetButton from "./CameraResetButton";
 
 extend({ UnrealBloomPass });
 
 const Scene = () => {
-  // Leva control: a checkbox to enable/disable bloom.
   const { bloom, bloom_threshold, bloom_strength, bloom_radius } = useControls({
     Bloom: folder(
       {
@@ -46,6 +39,8 @@ const Scene = () => {
     ),
   });
 
+  const controlsRef = useRef();
+
   return (
     <Canvas
       shadows
@@ -70,7 +65,8 @@ const Scene = () => {
           />
         </Effects>
       )}
-      <OrbitControls />
+      <OrbitControls ref={controlsRef} />
+      <CameraResetButton controlsRef={controlsRef} />
     </Canvas>
   );
 };
