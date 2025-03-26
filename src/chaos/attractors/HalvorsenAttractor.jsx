@@ -4,33 +4,24 @@ import ChaosManager from "../ChaosManager";
 import { HalvorsenEquation } from "../equations/HalvorsenEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
-import { commonAttractorControls } from "../controls/SharedControls";
 
-const HalvorsenAttractor = () => {
+const HalvorsenAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const params = useControls({
+  const { a } = useControls({
     Halvorsen: folder(
       {
         a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
       },
       { order: -1 }
     ),
-    ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    a,
-    dt,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-  } = params;
+  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+    sharedParams;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),

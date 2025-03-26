@@ -4,33 +4,24 @@ import ChaosManager from "../ChaosManager";
 import AttractorWrapper from "./AttractorWrapper";
 import { ThomasEquation } from "../equations/ThomasEquation";
 import * as THREE from "three";
-import { commonAttractorControls } from "../controls/SharedControls";
 
-const ThomasAttractor = () => {
+const ThomasAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const params = useControls({
+  const { b } = useControls({
     Thomas: folder(
       {
         b: { value: 0.19, min: 0, max: 0.3, step: 0.01 },
       },
       { order: -1 }
     ),
-    ...commonAttractorControls,
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    b,
-    dt,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-  } = params;
+  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+    sharedParams;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),

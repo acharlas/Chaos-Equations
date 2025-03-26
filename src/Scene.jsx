@@ -1,45 +1,50 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Canvas, extend } from "@react-three/fiber";
-import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
+import {
+  OrbitControls,
+  Stars,
+  Effects,
+  Stats,
+  BakeShadows,
+} from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
-import { folder, useControls } from "leva";
+import { folder, useControls, button } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
+import { getSceneControls } from "./controls/SceneControls";
 
 extend({ UnrealBloomPass });
 
 const Scene = () => {
-  const { bloom, bloom_threshold, bloom_strength, bloom_radius } = useControls({
-    Bloom: folder(
-      {
-        bloom: { value: false, label: "On" },
-        bloom_threshold: {
-          value: 0.5,
-          min: 0,
-          max: 1,
-          step: 0.01,
-          label: "threshold",
-        },
-        bloom_strength: {
-          value: 1.5,
-          min: 0,
-          max: 5,
-          step: 0.01,
-          label: "strength",
-        },
-        bloom_radius: {
-          value: 0.5,
-          min: 0,
-          max: 1.3,
-          step: 0.01,
-          label: "radius",
-        },
-      },
-      { order: 1, collapsed: true }
-    ),
+  // Destructure the controls returned by useControls.
+  const Scene = useControls({
+    Scene: folder(getSceneControls()),
   });
 
   const controlsRef = useRef();
+
+  // Build a shared params object
+  const {
+    Npoints,
+    trailLength,
+    lowSpeedHex,
+    highSpeedHex,
+    globalScale,
+    dt,
+    bloom,
+    bloom_threshold,
+    bloom_strength,
+    bloom_radius,
+  } = Scene;
+
+  const sharedParams = {
+    dt,
+    Npoints,
+    trailLength,
+    lowSpeedHex,
+    highSpeedHex,
+    globalScale,
+  };
 
   return (
     <Canvas
@@ -54,8 +59,7 @@ const Scene = () => {
     >
       <Stars radius={260} depth={1} />
       <Stats />
-      <AttractorManager />
-
+      <AttractorManager sharedParams={sharedParams} />
       {bloom && (
         <Effects disableGamma>
           <unrealBloomPass
@@ -65,6 +69,7 @@ const Scene = () => {
           />
         </Effects>
       )}
+      <BakeShadows />
       <OrbitControls ref={controlsRef} />
       <CameraResetButton controlsRef={controlsRef} />
     </Canvas>
