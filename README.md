@@ -3,6 +3,7 @@
 </p>
 
 # Chaos Attractors Simulation
+[![React][React.js]][React-url] [![Three][Three.js]][Three-url] ![build]
 
 A modern simulation engine for chaotic attractors in your browser. Chaos‐Equations renders complex chaotic systems (like the Lorenz and Halvorsen attractors) using react‑three‑fiber and Leva controls, letting you explore chaos in real time.
 
@@ -63,3 +64,11 @@ Open your browser and navigate to http://localhost:3000 to see the simulation.
   Wraps attractor components in a Three.js group that applies a global scaling factor.
 
 Feel free to explore and tweak the controls in the Leva panel to see how different parameters affect the simulation. Enjoy your chaotic visualizations!
+
+[build]: https://img.shields.io/github/actions/workflow/status/acharlas/Chaos-Equations/deploy.yml
+[React.js]: https://img.shields.io/badge/-ReactJs-61DAFB?logo=react&logoColor=white&style=for-the-badge
+[React-url]: https://react.dev/
+[Three.js]: https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white
+[Three-url]: https://threejs.org/
+
+
