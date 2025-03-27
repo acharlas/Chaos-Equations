@@ -1,7 +1,7 @@
 {
   "name": "chaos-equations-app-js",
   "homepage": "https://acharlas.github.io/Chaos-Equations",
-  "private": false,
+  "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
