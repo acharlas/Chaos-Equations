@@ -6,6 +6,7 @@ import AizawaAttractor from "./chaos/attractors/AizawaAttractor";
 import ChenLeeAttractor from "./chaos/attractors/ChenLeeAttractor";
 import ThomasAttractor from "./chaos/attractors/ThomasAttractor";
 import RosslerAttractor from "./chaos/attractors/RosslerAttractor";
+import ChuaAttractor from "./chaos/attractors/ChuaAttractor";
 
 const AttractorManager = ({ sharedParams }) => {
   const { attractor } = useControls({
@@ -18,6 +19,7 @@ const AttractorManager = ({ sharedParams }) => {
         ChenLee: "ChenLee",
         Thomas: "Thomas",
         Rossler: "Rossler",
+        Chua: "Chua",
       },
       order: -2,
     },
@@ -42,6 +44,9 @@ const AttractorManager = ({ sharedParams }) => {
       )}
       {attractor === "Rossler" && (
         <RosslerAttractor sharedParams={sharedParams} />
+      )}
+      {attractor === "Chua" && (
+        <ChuaAttractor sharedParams={sharedParams} />
       )}
     </>
   );
