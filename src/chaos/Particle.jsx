@@ -22,19 +22,13 @@ const Particle = ({
   // Pre-allocate buffers for positions and colors.
   const positionsBuffer = useRef(new Float32Array(trailLength * 3));
   const colorsBuffer = useRef(new Float32Array(trailLength * 3));
+  const positionAttributeRef = useRef(null);
+  const colorAttributeRef = useRef(null);
 
   // Create a BufferGeometry for the trail line.
   const geometryRef = useRef(new THREE.BufferGeometry());
   const lowColorRef = useRef(new THREE.Color());
   const highColorRef = useRef(new THREE.Color());
-
-  useEffect(() => {
-    lowColorRef.current.set(lowSpeedColor);
-  }, [lowSpeedColor]);
-
-  useEffect(() => {
-    highColorRef.current.set(highSpeedColor);
-  }, [highSpeedColor]);
 
   // (Re)initialize buffers when the trail length changes.
   useEffect(() => {
@@ -49,16 +43,44 @@ const Particle = ({
     );
     positionAttribute.setUsage(THREE.DynamicDrawUsage);
     geometryRef.current.setAttribute("position", positionAttribute);
+    positionAttributeRef.current = positionAttribute;
 
     const colorAttribute = new THREE.BufferAttribute(colorsBuffer.current, 3);
     colorAttribute.setUsage(THREE.DynamicDrawUsage);
     geometryRef.current.setAttribute("color", colorAttribute);
+    colorAttributeRef.current = colorAttribute;
     geometryRef.current.setDrawRange(0, 0);
 
     // Reset ring state.
     writeIndexRef.current = 0;
     countRef.current = 0;
   }, [trailLength]);
+
+  // Precompute gradient colors when colors or trail length change.
+  useEffect(() => {
+    if (trailLength <= 0) return;
+    const colorAttribute = colorAttributeRef.current;
+    if (!colorAttribute) return;
+
+    lowColorRef.current.set(lowSpeedColor);
+    highColorRef.current.set(highSpeedColor);
+
+    const lowCol = lowColorRef.current;
+    const highCol = highColorRef.current;
+    const dr = highCol.r - lowCol.r;
+    const dg = highCol.g - lowCol.g;
+    const db = highCol.b - lowCol.b;
+
+    for (let i = 0; i < trailLength; i++) {
+      const t = trailLength > 1 ? i / (trailLength - 1) : 0;
+      const offset = i * 3;
+      colorsBuffer.current[offset] = lowCol.r + dr * t;
+      colorsBuffer.current[offset + 1] = lowCol.g + dg * t;
+      colorsBuffer.current[offset + 2] = lowCol.b + db * t;
+    }
+
+    colorAttribute.needsUpdate = true;
+  }, [lowSpeedColor, highSpeedColor, trailLength]);
 
   // On restart, reset the particle's position and trail.
   useEffect(() => {
@@ -68,7 +90,6 @@ const Particle = ({
       // Seed the trail with the initial position.
       trailBuffer.current.fill(0);
       positionsBuffer.current.fill(0);
-      colorsBuffer.current.fill(0);
       trailBuffer.current[0] = initialPosition[0];
       trailBuffer.current[1] = initialPosition[1];
       trailBuffer.current[2] = initialPosition[2];
@@ -105,31 +126,23 @@ const Particle = ({
     const startIndex = nextCount === trailLength ? writeIndexRef.current : 0;
     geometryRef.current.setDrawRange(0, nextCount);
 
-    const positionAttribute = geometryRef.current.getAttribute("position");
-    const colorAttribute = geometryRef.current.getAttribute("color");
-    if (!positionAttribute || !colorAttribute) return;
+    const positionAttribute = positionAttributeRef.current;
+    if (!positionAttribute) return;
 
-    const lowCol = lowColorRef.current;
-    const highCol = highColorRef.current;
-    const dr = highCol.r - lowCol.r;
-    const dg = highCol.g - lowCol.g;
-    const db = highCol.b - lowCol.b;
+    const positions = positionsBuffer.current;
+    const trail = trailBuffer.current;
+    const totalComponents = nextCount * 3;
 
-    for (let i = 0; i < nextCount; i++) {
-      const srcIndex = (startIndex + i) % trailLength;
-      const srcOffset = srcIndex * 3;
-      const dstOffset = i * 3;
-
-      positionsBuffer.current[dstOffset] = trailBuffer.current[srcOffset];
-      positionsBuffer.current[dstOffset + 1] =
-        trailBuffer.current[srcOffset + 1];
-      positionsBuffer.current[dstOffset + 2] =
-        trailBuffer.current[srcOffset + 2];
-
-      const t = nextCount > 1 ? i / (nextCount - 1) : 0;
-      colorsBuffer.current[dstOffset] = lowCol.r + dr * t;
-      colorsBuffer.current[dstOffset + 1] = lowCol.g + dg * t;
-      colorsBuffer.current[dstOffset + 2] = lowCol.b + db * t;
+    if (nextCount === trailLength && startIndex !== 0) {
+      const firstCount = trailLength - startIndex;
+      const firstComponents = firstCount * 3;
+      positions.set(
+        trail.subarray(startIndex * 3, trailLength * 3),
+        0
+      );
+      positions.set(trail.subarray(0, startIndex * 3), firstComponents);
+    } else {
+      positions.set(trail.subarray(0, totalComponents), 0);
     }
 
     if (!positionAttribute.updateRange) {
@@ -138,12 +151,6 @@ const Particle = ({
     positionAttribute.updateRange.offset = 0;
     positionAttribute.updateRange.count = nextCount * 3;
     positionAttribute.needsUpdate = true;
-    if (!colorAttribute.updateRange) {
-      colorAttribute.updateRange = { offset: 0, count: -1 };
-    }
-    colorAttribute.updateRange.offset = 0;
-    colorAttribute.updateRange.count = nextCount * 3;
-    colorAttribute.needsUpdate = true;
   });
 
   return (
