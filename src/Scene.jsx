@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { Canvas, extend } from "@react-three/fiber";
 import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
-import { folder, useControls, button } from "leva";
+import { folder, useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
