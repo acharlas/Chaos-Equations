@@ -11,20 +11,21 @@ const ParticleState = forwardRef(({
   initialPosition,
   dt,
   trailLength,
+  trailTarget,
+  trailOffset = 0,
   equation,
   freeze = false,
   restartTrigger,
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
   const wRef = useRef(0);
-  // Fixed-size ring buffer for trail positions.
-  const trailBuffer = useRef(new Float32Array(trailLength * 3));
   const writeIndexRef = useRef(0);
-  const countRef = useRef(0);
   const dtRef = useRef(dt);
   const equationRef = useRef(equation);
   const freezeRef = useRef(freeze);
   const trailLengthRef = useRef(trailLength);
+  const trailTargetRef = useRef(trailTarget);
+  const trailOffsetRef = useRef(trailOffset);
 
   useEffect(() => {
     dtRef.current = dt;
@@ -42,21 +43,33 @@ const ParticleState = forwardRef(({
     trailLengthRef.current = trailLength;
   }, [trailLength]);
 
+  useEffect(() => {
+    trailTargetRef.current = trailTarget;
+  }, [trailTarget]);
+
+  useEffect(() => {
+    trailOffsetRef.current = trailOffset;
+  }, [trailOffset]);
+
   // (Re)initialize buffer when the trail length changes.
   useEffect(() => {
-    const size = trailLength * 3;
-    trailBuffer.current = new Float32Array(size);
-
     const pos = positionRef.current;
     if (trailLength > 0) {
-      trailBuffer.current[0] = pos.x;
-      trailBuffer.current[1] = pos.y;
-      trailBuffer.current[2] = pos.z;
       writeIndexRef.current = trailLength > 1 ? 1 : 0;
-      countRef.current = 1;
     } else {
       writeIndexRef.current = 0;
-      countRef.current = 0;
+    }
+
+    const targetRef = trailTargetRef.current;
+    const target = targetRef?.current ?? targetRef;
+    const offset = trailOffsetRef.current;
+    if (target && trailLength > 0) {
+      const size = trailLength * 3;
+      for (let i = 0; i < size; i += 3) {
+        target[offset + i] = pos.x;
+        target[offset + i + 1] = pos.y;
+        target[offset + i + 2] = pos.z;
+      }
     }
   }, [trailLength]);
 
@@ -69,17 +82,22 @@ const ParticleState = forwardRef(({
     );
     wRef.current = 0;
 
-    const buffer = trailBuffer.current;
-    buffer.fill(0);
     if (trailLength > 0) {
-      buffer[0] = initialPosition[0];
-      buffer[1] = initialPosition[1];
-      buffer[2] = initialPosition[2];
       writeIndexRef.current = trailLength > 1 ? 1 : 0;
-      countRef.current = 1;
     } else {
       writeIndexRef.current = 0;
-      countRef.current = 0;
+    }
+
+    const targetRef = trailTargetRef.current;
+    const target = targetRef?.current ?? targetRef;
+    const offset = trailOffsetRef.current;
+    if (target && trailLength > 0) {
+      const size = trailLength * 3;
+      for (let i = 0; i < size; i += 3) {
+        target[offset + i] = initialPosition[0];
+        target[offset + i + 1] = initialPosition[1];
+        target[offset + i + 2] = initialPosition[2];
+      }
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
@@ -104,61 +122,21 @@ const ParticleState = forwardRef(({
     }
 
     if (writeTrail) {
-      // Write into ring buffer.
       const writeIndex = writeIndexRef.current;
       const writeOffset = writeIndex * 3;
-      trailBuffer.current[writeOffset] = newX;
-      trailBuffer.current[writeOffset + 1] = newY;
-      trailBuffer.current[writeOffset + 2] = newZ;
-
       writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
-      const nextCount = Math.min(countRef.current + 1, currentTrailLength);
-      countRef.current = nextCount;
+
+      const targetRef = trailTargetRef.current;
+      const target = targetRef?.current ?? targetRef;
+      if (target) {
+        const baseOffset = trailOffsetRef.current + writeOffset;
+        target[baseOffset] = newX;
+        target[baseOffset + 1] = newY;
+        target[baseOffset + 2] = newZ;
+      }
     }
 
     return pos;
-  }, []);
-
-  const copyTrailTo = useCallback((targetArray, targetOffset) => {
-    const currentTrailLength = trailLengthRef.current;
-    if (currentTrailLength <= 0) return;
-    const count = countRef.current;
-    if (count <= 0) return;
-
-    const startIndex =
-      count === currentTrailLength ? writeIndexRef.current : 0;
-    const trail = trailBuffer.current;
-
-    if (count === currentTrailLength && startIndex !== 0) {
-      const firstCount = currentTrailLength - startIndex;
-      const firstComponents = firstCount * 3;
-      targetArray.set(
-        trail.subarray(startIndex * 3, currentTrailLength * 3),
-        targetOffset
-      );
-      targetArray.set(
-        trail.subarray(0, startIndex * 3),
-        targetOffset + firstComponents
-      );
-      return;
-    }
-
-    const countComponents = count * 3;
-    targetArray.set(trail.subarray(0, countComponents), targetOffset);
-
-    if (count < currentTrailLength) {
-      const lastOffset = (count - 1) * 3;
-      const lastX = trail[lastOffset];
-      const lastY = trail[lastOffset + 1];
-      const lastZ = trail[lastOffset + 2];
-      let dst = targetOffset + countComponents;
-      const end = targetOffset + currentTrailLength * 3;
-      for (; dst < end; dst += 3) {
-        targetArray[dst] = lastX;
-        targetArray[dst + 1] = lastY;
-        targetArray[dst + 2] = lastZ;
-      }
-    }
   }, []);
 
   useImperativeHandle(
@@ -166,9 +144,9 @@ const ParticleState = forwardRef(({
     () => ({
       step,
       getPosition: () => positionRef.current,
-      copyTrailTo,
+      getWriteIndex: () => writeIndexRef.current,
     }),
-    [step, copyTrailTo]
+    [step]
   );
 
   return null;

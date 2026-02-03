@@ -24,6 +24,8 @@ const ChaosManager = ({
   const trailColorsRef = useRef(new Float32Array(0));
   const trailPositionAttrRef = useRef(null);
   const trailColorAttrRef = useRef(null);
+  const trailIndexAttrRef = useRef(null);
+  const breakSegmentsRef = useRef([]);
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -52,6 +54,7 @@ const ChaosManager = ({
 
   useEffect(() => {
     particleRefs.current = particleRefs.current.slice(0, Npoints);
+    breakSegmentsRef.current = new Array(Npoints).fill(-1);
   }, [Npoints]);
 
   useEffect(() => {
@@ -62,6 +65,11 @@ const ChaosManager = ({
   }, [Npoints]);
 
   useEffect(() => {
+    const previousGeometry = trailsGeometryRef.current;
+    const previousPositionAttr = trailPositionAttrRef.current;
+    const previousColorAttr = trailColorAttrRef.current;
+    const previousIndex = previousGeometry.getIndex?.();
+
     const totalPoints = Npoints * renderTrailLength;
     const positions = new Float32Array(totalPoints * 3);
     const colors = new Float32Array(totalPoints * 3);
@@ -92,13 +100,26 @@ const ChaosManager = ({
           indexArray[index++] = base + i + 1;
         }
       }
-      trailsGeometryRef.current.setIndex(
-        new THREE.BufferAttribute(indexArray, 1)
-      );
+      const indexAttr = new THREE.BufferAttribute(indexArray, 1);
+      trailsGeometryRef.current.setIndex(indexAttr);
+      trailIndexAttrRef.current = indexAttr;
       trailsGeometryRef.current.setDrawRange(0, indexArray.length);
     } else {
       trailsGeometryRef.current.setIndex(null);
+      trailIndexAttrRef.current = null;
       trailsGeometryRef.current.setDrawRange(0, 0);
+    }
+
+    breakSegmentsRef.current = new Array(Npoints).fill(-1);
+
+    if (previousIndex && previousIndex !== trailsGeometryRef.current.getIndex()) {
+      previousIndex.dispose?.();
+    }
+    if (previousPositionAttr && previousPositionAttr !== positionAttr) {
+      previousPositionAttr.dispose?.();
+    }
+    if (previousColorAttr && previousColorAttr !== colorAttr) {
+      previousColorAttr.dispose?.();
     }
   }, [Npoints, renderTrailLength]);
 
@@ -131,9 +152,12 @@ const ChaosManager = ({
     if (freeze) return;
     const refs = particleRefs.current;
     const mesh = sphereMeshRef.current;
-    const positions = trailPositionsRef.current;
     const positionAttr = trailPositionAttrRef.current;
+    const indexAttr = trailIndexAttrRef.current;
     const steps = Math.max(1, substeps);
+    const breakSegments = breakSegmentsRef.current;
+    let minIndexUpdate = null;
+    let maxIndexUpdate = null;
     for (let i = 0; i < refs.length; i++) {
       const particle = refs[i];
       let position = null;
@@ -147,8 +171,43 @@ const ChaosManager = ({
         tempMatrix.current.setPosition(position);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      if (positions.length > 0) {
-        particle?.copyTrailTo?.(positions, i * renderTrailLength * 3);
+      if (indexAttr && renderTrailLength > 1 && particle?.getWriteIndex) {
+        const writeIndex = particle.getWriteIndex();
+        const nextBreak = writeIndex === 0 ? -1 : writeIndex - 1;
+        const prevBreak = breakSegments[i] ?? -1;
+        if (prevBreak !== nextBreak) {
+          const baseVertex = i * renderTrailLength;
+          const baseSegmentOffset = i * (renderTrailLength - 1) * 2;
+          const indexArray = indexAttr.array;
+          if (prevBreak >= 0) {
+            const restoreOffset = baseSegmentOffset + prevBreak * 2;
+            indexArray[restoreOffset] = baseVertex + prevBreak;
+            indexArray[restoreOffset + 1] = baseVertex + prevBreak + 1;
+            minIndexUpdate =
+              minIndexUpdate === null
+                ? restoreOffset
+                : Math.min(minIndexUpdate, restoreOffset);
+            maxIndexUpdate =
+              maxIndexUpdate === null
+                ? restoreOffset + 1
+                : Math.max(maxIndexUpdate, restoreOffset + 1);
+          }
+          if (nextBreak >= 0) {
+            const breakOffset = baseSegmentOffset + nextBreak * 2;
+            const v = baseVertex + nextBreak;
+            indexArray[breakOffset] = v;
+            indexArray[breakOffset + 1] = v;
+            minIndexUpdate =
+              minIndexUpdate === null
+                ? breakOffset
+                : Math.min(minIndexUpdate, breakOffset);
+            maxIndexUpdate =
+              maxIndexUpdate === null
+                ? breakOffset + 1
+                : Math.max(maxIndexUpdate, breakOffset + 1);
+          }
+          breakSegments[i] = nextBreak;
+        }
       }
     }
     if (mesh) {
@@ -156,6 +215,14 @@ const ChaosManager = ({
     }
     if (positionAttr) {
       positionAttr.needsUpdate = true;
+    }
+    if (indexAttr && minIndexUpdate !== null) {
+      if (!indexAttr.updateRange) {
+        indexAttr.updateRange = { offset: 0, count: -1 };
+      }
+      indexAttr.updateRange.offset = minIndexUpdate;
+      indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate + 1;
+      indexAttr.needsUpdate = true;
     }
   });
 
@@ -205,6 +272,8 @@ const ChaosManager = ({
           }}
           initialPosition={pos}
           dt={dt}
+          trailTarget={trailPositionsRef}
+          trailOffset={idx * renderTrailLength * 3}
           trailLength={renderTrailLength}
           equation={equation}
           freeze={freeze}
