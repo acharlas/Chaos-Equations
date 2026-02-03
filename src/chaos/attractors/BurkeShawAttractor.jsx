@@ -9,12 +9,11 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const { a, b, c } = useControls({
+  const { a, b } = useControls({
     BurkeShaw: folder(
       {
-        a: { value: 10, min: 0, max: 15, step: 0.1 },
-        b: { value: 4, min: 0, max: 10, step: 0.1 },
-        c: { value: 1, min: -5, max: 5, step: 0.1 },
+        a: { value: 10, min: 0, max: 20, step: 0.1 },
+        b: { value: 13, min: 0, max: 20, step: 0.1 },
       },
       { order: -1 }
     ),
@@ -22,7 +21,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+  const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
     sharedParams;
 
   const lowSpeedColor = useMemo(
@@ -35,7 +34,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return BurkeShawEquation(x, y, z, dtLocal, { a, b, c });
+    return BurkeShawEquation(x, y, z, dtLocal, { a, b });
   };
 
   return (
@@ -44,6 +43,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
         Npoints={Npoints}
         trailLength={trailLength}
         dt={dt}
+        substeps={substeps}
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}

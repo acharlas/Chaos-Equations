@@ -1,7 +1,7 @@
 export const BurkeShawEquation = (x, y, z, dt, params) => {
-  const { a, b, c } = params;
-  const dx = (-a * x - y * z) * dt;
-  const dy = (-x + b * y + x * z) * dt;
-  const dz = (c * z + x * y - x * x) * dt;
+  const { a, b } = params;
+  const dx = (-a * (x + y)) * dt;
+  const dy = (-y - a * x * z) * dt;
+  const dz = (a * x * y + b) * dt;
   return [dx, dy, dz];
 };

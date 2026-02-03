@@ -83,7 +83,7 @@ const ParticleState = forwardRef(({
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
-  const step = useCallback(() => {
+  const step = useCallback((writeTrail = true) => {
     if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
@@ -103,16 +103,18 @@ const ParticleState = forwardRef(({
       wRef.current += dw;
     }
 
-    // Write into ring buffer.
-    const writeIndex = writeIndexRef.current;
-    const writeOffset = writeIndex * 3;
-    trailBuffer.current[writeOffset] = newX;
-    trailBuffer.current[writeOffset + 1] = newY;
-    trailBuffer.current[writeOffset + 2] = newZ;
+    if (writeTrail) {
+      // Write into ring buffer.
+      const writeIndex = writeIndexRef.current;
+      const writeOffset = writeIndex * 3;
+      trailBuffer.current[writeOffset] = newX;
+      trailBuffer.current[writeOffset + 1] = newY;
+      trailBuffer.current[writeOffset + 2] = newZ;
 
-    writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
-    const nextCount = Math.min(countRef.current + 1, currentTrailLength);
-    countRef.current = nextCount;
+      writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
+      const nextCount = Math.min(countRef.current + 1, currentTrailLength);
+      countRef.current = nextCount;
+    }
 
     return pos;
   }, []);
