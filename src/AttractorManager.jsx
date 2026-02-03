@@ -13,6 +13,7 @@ import BoualiAttractor from "./chaos/attractors/BoualiAttractor";
 import BurkeShawAttractor from "./chaos/attractors/BurkeShawAttractor";
 import RabinovichFabrikantAttractor from "./chaos/attractors/RabinovichFabrikantAttractor";
 import NewtonLeipnikAttractor from "./chaos/attractors/NewtonLeipnikAttractor";
+import NoseHooverAttractor from "./chaos/attractors/NoseHooverAttractor";
 
 const AttractorManager = ({ sharedParams }) => {
   const { attractor } = useControls({
@@ -32,6 +33,7 @@ const AttractorManager = ({ sharedParams }) => {
         BurkeShaw: "BurkeShaw",
         RabinovichFabrikant: "RabinovichFabrikant",
         NewtonLeipnik: "NewtonLeipnik",
+        NoseHoover: "NoseHoover",
       },
       order: -2,
     },
@@ -77,6 +79,9 @@ const AttractorManager = ({ sharedParams }) => {
       )}
       {attractor === "NewtonLeipnik" && (
         <NewtonLeipnikAttractor sharedParams={sharedParams} />
+      )}
+      {attractor === "NoseHoover" && (
+        <NoseHooverAttractor sharedParams={sharedParams} />
       )}
     </>
   );
