@@ -23,6 +23,9 @@ const Scene = () => {
     highSpeedHex,
     globalScale,
     dt,
+    showStats,
+    showStars,
+    maxDpr,
 
     bloom,
     bloom_threshold,
@@ -43,6 +46,7 @@ const Scene = () => {
     <Canvas
       shadows
       gl={{ antialias: false }}
+      dpr={[1, maxDpr]}
       camera={{
         position: [-140, -140, -160],
         fov: 75,
@@ -50,8 +54,8 @@ const Scene = () => {
         far: 1000,
       }}
     >
-      <Stars radius={260} depth={1} />
-      <Stats />
+      {showStars && <Stars radius={260} depth={1} />}
+      {showStats && <Stats />}
       <AttractorManager sharedParams={sharedParams} />
       {bloom && (
         <Effects disableGamma>

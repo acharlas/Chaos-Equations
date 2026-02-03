@@ -19,6 +19,10 @@ export const getSceneControls = () => ({
   globalScale: { value: 6, min: 1, max: 15, step: 0.1, label: "Scale" },
   dt: { value: 0.005, min: 0.0001, max: 0.01, step: 0.001 },
 
+  showStats: { value: false, label: "Stats" },
+  showStars: { value: true, label: "Stars" },
+  maxDpr: { value: 1.5, min: 1, max: 2, step: 0.1, label: "Max DPR" },
+
   bloom: { value: false, label: "Bloom" },
   bloom_options: folder(
     {
