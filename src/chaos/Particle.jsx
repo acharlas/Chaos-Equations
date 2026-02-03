@@ -1,8 +1,13 @@
-import React, { useRef, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
+import React, {
+  useRef,
+  useEffect,
+  useCallback,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import * as THREE from "three";
 
-const Particle = ({
+const Particle = forwardRef(({
   initialPosition,
   dt,
   trailLength,
@@ -12,12 +17,16 @@ const Particle = ({
   sphereSize = 0.05,
   freeze = false,
   restartTrigger,
-}) => {
+}, ref) => {
   const meshRef = useRef();
   // Fixed-size ring buffer for trail positions.
   const trailBuffer = useRef(new Float32Array(trailLength * 3));
   const writeIndexRef = useRef(0);
   const countRef = useRef(0);
+  const dtRef = useRef(dt);
+  const equationRef = useRef(equation);
+  const freezeRef = useRef(freeze);
+  const trailLengthRef = useRef(trailLength);
 
   // Pre-allocate buffers for positions and colors.
   const positionsBuffer = useRef(new Float32Array(trailLength * 3));
@@ -29,6 +38,22 @@ const Particle = ({
   const geometryRef = useRef(new THREE.BufferGeometry());
   const lowColorRef = useRef(new THREE.Color());
   const highColorRef = useRef(new THREE.Color());
+
+  useEffect(() => {
+    dtRef.current = dt;
+  }, [dt]);
+
+  useEffect(() => {
+    equationRef.current = equation;
+  }, [equation]);
+
+  useEffect(() => {
+    freezeRef.current = freeze;
+  }, [freeze]);
+
+  useEffect(() => {
+    trailLengthRef.current = trailLength;
+  }, [trailLength]);
 
   // (Re)initialize buffers when the trail length changes.
   useEffect(() => {
@@ -100,12 +125,18 @@ const Particle = ({
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
-  useFrame(() => {
-    if (freeze) return;
+  const step = useCallback(() => {
+    if (freezeRef.current) return;
     if (!meshRef.current) return;
-    if (trailLength <= 0) return;
+    const currentTrailLength = trailLengthRef.current;
+    if (currentTrailLength <= 0) return;
     const pos = meshRef.current.position;
-    const [dx, dy, dz] = equation(pos.x, pos.y, pos.z, dt);
+    const [dx, dy, dz] = equationRef.current(
+      pos.x,
+      pos.y,
+      pos.z,
+      dtRef.current
+    );
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
@@ -118,12 +149,13 @@ const Particle = ({
     trailBuffer.current[writeOffset + 1] = newY;
     trailBuffer.current[writeOffset + 2] = newZ;
 
-    writeIndexRef.current = (writeIndex + 1) % trailLength;
-    const nextCount = Math.min(countRef.current + 1, trailLength);
+    writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
+    const nextCount = Math.min(countRef.current + 1, currentTrailLength);
     countRef.current = nextCount;
 
     // Render in oldest -> newest order into contiguous buffers.
-    const startIndex = nextCount === trailLength ? writeIndexRef.current : 0;
+    const startIndex =
+      nextCount === currentTrailLength ? writeIndexRef.current : 0;
     geometryRef.current.setDrawRange(0, nextCount);
 
     const positionAttribute = positionAttributeRef.current;
@@ -133,11 +165,11 @@ const Particle = ({
     const trail = trailBuffer.current;
     const totalComponents = nextCount * 3;
 
-    if (nextCount === trailLength && startIndex !== 0) {
-      const firstCount = trailLength - startIndex;
+    if (nextCount === currentTrailLength && startIndex !== 0) {
+      const firstCount = currentTrailLength - startIndex;
       const firstComponents = firstCount * 3;
       positions.set(
-        trail.subarray(startIndex * 3, trailLength * 3),
+        trail.subarray(startIndex * 3, currentTrailLength * 3),
         0
       );
       positions.set(trail.subarray(0, startIndex * 3), firstComponents);
@@ -151,7 +183,9 @@ const Particle = ({
     positionAttribute.updateRange.offset = 0;
     positionAttribute.updateRange.count = nextCount * 3;
     positionAttribute.needsUpdate = true;
-  });
+  }, []);
+
+  useImperativeHandle(ref, () => ({ step }), [step]);
 
   return (
     <>
@@ -169,6 +203,8 @@ const Particle = ({
       </line>
     </>
   );
-};
+});
+
+Particle.displayName = "Particle";
 
 export default Particle;
