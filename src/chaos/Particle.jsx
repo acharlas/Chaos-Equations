@@ -14,11 +14,10 @@ const Particle = forwardRef(({
   equation,
   lowSpeedColor,
   highSpeedColor,
-  sphereSize = 0.05,
   freeze = false,
   restartTrigger,
 }, ref) => {
-  const meshRef = useRef();
+  const positionRef = useRef(new THREE.Vector3());
   // Fixed-size ring buffer for trail positions.
   const trailBuffer = useRef(new Float32Array(trailLength * 3));
   const writeIndexRef = useRef(0);
@@ -109,28 +108,29 @@ const Particle = forwardRef(({
 
   // On restart, reset the particle's position and trail.
   useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.position.set(...initialPosition);
+    positionRef.current.set(
+      initialPosition[0],
+      initialPosition[1],
+      initialPosition[2]
+    );
 
-      // Seed the trail with the initial position.
-      trailBuffer.current.fill(0);
-      positionsBuffer.current.fill(0);
-      trailBuffer.current[0] = initialPosition[0];
-      trailBuffer.current[1] = initialPosition[1];
-      trailBuffer.current[2] = initialPosition[2];
+    // Seed the trail with the initial position.
+    trailBuffer.current.fill(0);
+    positionsBuffer.current.fill(0);
+    trailBuffer.current[0] = initialPosition[0];
+    trailBuffer.current[1] = initialPosition[1];
+    trailBuffer.current[2] = initialPosition[2];
 
-      writeIndexRef.current = trailLength > 1 ? 1 : 0;
-      countRef.current = 1;
-      geometryRef.current.setDrawRange(0, 0);
-    }
+    writeIndexRef.current = trailLength > 1 ? 1 : 0;
+    countRef.current = 1;
+    geometryRef.current.setDrawRange(0, 0);
   }, [restartTrigger, initialPosition, trailLength]);
 
   const step = useCallback(() => {
-    if (freezeRef.current) return;
-    if (!meshRef.current) return;
+    if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return;
-    const pos = meshRef.current.position;
+    const pos = positionRef.current;
     const [dx, dy, dz] = equationRef.current(
       pos.x,
       pos.y,
@@ -140,7 +140,7 @@ const Particle = forwardRef(({
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
-    meshRef.current.position.set(newX, newY, newZ);
+    pos.set(newX, newY, newZ);
 
     // Write into ring buffer.
     const writeIndex = writeIndexRef.current;
@@ -183,21 +183,16 @@ const Particle = forwardRef(({
     positionAttribute.updateRange.offset = 0;
     positionAttribute.updateRange.count = nextCount * 3;
     positionAttribute.needsUpdate = true;
+    return pos;
   }, []);
 
-  useImperativeHandle(ref, () => ({ step }), [step]);
+  useImperativeHandle(ref, () => ({
+    step,
+    getPosition: () => positionRef.current,
+  }), [step]);
 
   return (
     <>
-      <mesh ref={meshRef} position={initialPosition}>
-        <sphereGeometry args={[sphereSize, 16, 16]} />
-        <meshBasicMaterial
-          color={highSpeedColor}
-          transparent={true}
-          opacity={1}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
       <line geometry={geometryRef.current}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </line>
