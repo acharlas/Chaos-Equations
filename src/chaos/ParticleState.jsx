@@ -16,6 +16,7 @@ const ParticleState = forwardRef(({
   restartTrigger,
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
+  const wRef = useRef(0);
   // Fixed-size ring buffer for trail positions.
   const trailBuffer = useRef(new Float32Array(trailLength * 3));
   const writeIndexRef = useRef(0);
@@ -66,6 +67,7 @@ const ParticleState = forwardRef(({
       initialPosition[1],
       initialPosition[2]
     );
+    wRef.current = 0;
 
     const buffer = trailBuffer.current;
     buffer.fill(0);
@@ -86,16 +88,20 @@ const ParticleState = forwardRef(({
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
     const pos = positionRef.current;
-    const [dx, dy, dz] = equationRef.current(
+    const [dx, dy, dz, dw] = equationRef.current(
       pos.x,
       pos.y,
       pos.z,
-      dtRef.current
+      dtRef.current,
+      wRef.current
     );
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
     pos.set(newX, newY, newZ);
+    if (typeof dw === "number") {
+      wRef.current += dw;
+    }
 
     // Write into ring buffer.
     const writeIndex = writeIndexRef.current;

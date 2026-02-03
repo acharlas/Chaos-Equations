@@ -15,6 +15,7 @@ import RabinovichFabrikantAttractor from "./chaos/attractors/RabinovichFabrikant
 import NewtonLeipnikAttractor from "./chaos/attractors/NewtonLeipnikAttractor";
 import NoseHooverAttractor from "./chaos/attractors/NoseHooverAttractor";
 import ArneodoAttractor from "./chaos/attractors/ArneodoAttractor";
+import HyperRosslerAttractor from "./chaos/attractors/HyperRosslerAttractor";
 
 const AttractorManager = ({ sharedParams }) => {
   const { attractor } = useControls({
@@ -36,6 +37,7 @@ const AttractorManager = ({ sharedParams }) => {
         NewtonLeipnik: "NewtonLeipnik",
         NoseHoover: "NoseHoover",
         Arneodo: "Arneodo",
+        HyperRossler: "HyperRossler",
       },
       order: -2,
     },
@@ -87,6 +89,9 @@ const AttractorManager = ({ sharedParams }) => {
       )}
       {attractor === "Arneodo" && (
         <ArneodoAttractor sharedParams={sharedParams} />
+      )}
+      {attractor === "HyperRossler" && (
+        <HyperRosslerAttractor sharedParams={sharedParams} />
       )}
     </>
   );
