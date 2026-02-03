@@ -1,32 +1,29 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { folder, useControls, button } from "leva";
 import ChaosManager from "../ChaosManager";
+import { RabinovichFabrikantEquation } from "../equations/RabinovichFabrikantEquation";
 import AttractorWrapper from "./AttractorWrapper";
-import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
 
-const ChenLeeAttractor = ({ sharedParams }) => {
+const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const params = useControls({
-    ChenLee: folder(
+  const { alpha, gamma } = useControls({
+    RabinovichFabrikant: folder(
       {
-        a: { value: 0.9, min: -20, max: 20, step: 0.1 },
-        b: { value: -3, min: -20, max: 20, step: 0.1 },
-        c: { value: -0.38, min: -1, max: 1, step: 0.01 },
+        alpha: { value: 0.14, min: 0.01, max: 1, step: 0.01 },
+        gamma: { value: 0.1, min: 0, max: 1, step: 0.01 },
       },
       { order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
+
   const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
     sharedParams;
 
-  const { a, b, c } = params;
-
-  // Convert color hex to THREE.Color
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
     [lowSpeedHex]
@@ -37,7 +34,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
+    return RabinovichFabrikantEquation(x, y, z, dtLocal, { alpha, gamma });
   };
 
   return (
@@ -57,4 +54,4 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   );
 };
 
-export default ChenLeeAttractor;
+export default RabinovichFabrikantAttractor;

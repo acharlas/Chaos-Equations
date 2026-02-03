@@ -1,32 +1,30 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { folder, useControls, button } from "leva";
 import ChaosManager from "../ChaosManager";
+import { RosslerEquation } from "../equations/RosslerEquation";
 import AttractorWrapper from "./AttractorWrapper";
-import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
 
-const ChenLeeAttractor = ({ sharedParams }) => {
+const RosslerAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const params = useControls({
-    ChenLee: folder(
+  const { a, b, c } = useControls({
+    Rossler: folder(
       {
-        a: { value: 0.9, min: -20, max: 20, step: 0.1 },
-        b: { value: -3, min: -20, max: 20, step: 0.1 },
-        c: { value: -0.38, min: -1, max: 1, step: 0.01 },
+        a: { value: 0.2, min: 0, max: 0.5, step: 0.01 },
+        b: { value: 0.2, min: 0, max: 0.5, step: 0.01 },
+        c: { value: 5.7, min: 1, max: 10, step: 0.1 },
       },
       { order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
+
   const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
     sharedParams;
 
-  const { a, b, c } = params;
-
-  // Convert color hex to THREE.Color
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
     [lowSpeedHex]
@@ -37,7 +35,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
+    return RosslerEquation(x, y, z, dtLocal, { a, b, c });
   };
 
   return (
@@ -57,4 +55,4 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   );
 };
 
-export default ChenLeeAttractor;
+export default RosslerAttractor;

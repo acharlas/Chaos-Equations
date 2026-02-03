@@ -16,6 +16,7 @@ const ParticleState = forwardRef(({
   restartTrigger,
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
+  const wRef = useRef(0);
   // Fixed-size ring buffer for trail positions.
   const trailBuffer = useRef(new Float32Array(trailLength * 3));
   const writeIndexRef = useRef(0);
@@ -66,6 +67,7 @@ const ParticleState = forwardRef(({
       initialPosition[1],
       initialPosition[2]
     );
+    wRef.current = 0;
 
     const buffer = trailBuffer.current;
     buffer.fill(0);
@@ -81,32 +83,38 @@ const ParticleState = forwardRef(({
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
-  const step = useCallback(() => {
+  const step = useCallback((writeTrail = true) => {
     if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
     const pos = positionRef.current;
-    const [dx, dy, dz] = equationRef.current(
+    const [dx, dy, dz, dw] = equationRef.current(
       pos.x,
       pos.y,
       pos.z,
-      dtRef.current
+      dtRef.current,
+      wRef.current
     );
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
     pos.set(newX, newY, newZ);
+    if (typeof dw === "number") {
+      wRef.current += dw;
+    }
 
-    // Write into ring buffer.
-    const writeIndex = writeIndexRef.current;
-    const writeOffset = writeIndex * 3;
-    trailBuffer.current[writeOffset] = newX;
-    trailBuffer.current[writeOffset + 1] = newY;
-    trailBuffer.current[writeOffset + 2] = newZ;
+    if (writeTrail) {
+      // Write into ring buffer.
+      const writeIndex = writeIndexRef.current;
+      const writeOffset = writeIndex * 3;
+      trailBuffer.current[writeOffset] = newX;
+      trailBuffer.current[writeOffset + 1] = newY;
+      trailBuffer.current[writeOffset + 2] = newZ;
 
-    writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
-    const nextCount = Math.min(countRef.current + 1, currentTrailLength);
-    countRef.current = nextCount;
+      writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
+      const nextCount = Math.min(countRef.current + 1, currentTrailLength);
+      countRef.current = nextCount;
+    }
 
     return pos;
   }, []);

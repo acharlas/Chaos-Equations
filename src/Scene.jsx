@@ -23,6 +23,7 @@ const Scene = () => {
     highSpeedHex,
     globalScale,
     dt,
+    substeps,
     showStats,
     showStars,
     maxDpr,
@@ -35,6 +36,7 @@ const Scene = () => {
 
   const sharedParams = {
     dt,
+    substeps,
     Npoints,
     trailLength,
     lowSpeedHex,
@@ -51,10 +53,10 @@ const Scene = () => {
         position: [-140, -140, -160],
         fov: 75,
         near: 0.01,
-        far: 1000,
+        far: 3000,
       }}
     >
-      {showStars && <Stars radius={260} depth={1} />}
+      {showStars && <Stars radius={1200} depth={1} />}
       {showStats && <Stats />}
       <AttractorManager sharedParams={sharedParams} />
       {bloom && (

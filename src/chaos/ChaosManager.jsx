@@ -8,6 +8,7 @@ const ChaosManager = ({
   Npoints,
   trailLength,
   dt,
+  substeps = 1,
   equation,
   lowSpeedColor,
   highSpeedColor,
@@ -127,13 +128,20 @@ const ChaosManager = ({
   }, [lowSpeedColor, highSpeedColor, renderTrailLength, Npoints]);
 
   useFrame(() => {
+    if (freeze) return;
     const refs = particleRefs.current;
     const mesh = sphereMeshRef.current;
     const positions = trailPositionsRef.current;
     const positionAttr = trailPositionAttrRef.current;
+    const steps = Math.max(1, substeps);
     for (let i = 0; i < refs.length; i++) {
       const particle = refs[i];
-      const position = particle?.step?.();
+      let position = null;
+      if (particle?.step) {
+        for (let s = 0; s < steps; s++) {
+          position = particle.step(s === steps - 1);
+        }
+      }
       if (mesh && position) {
         tempMatrix.current.identity();
         tempMatrix.current.setPosition(position);

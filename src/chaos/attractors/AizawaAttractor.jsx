@@ -25,7 +25,7 @@ const AizawaAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const { dt, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+  const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
     sharedParams;
 
   const lowSpeedColor = useMemo(
@@ -47,6 +47,7 @@ const AizawaAttractor = ({ sharedParams }) => {
         Npoints={Npoints}
         trailLength={trailLength}
         dt={dt}
+        substeps={substeps}
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
