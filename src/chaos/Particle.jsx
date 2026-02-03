@@ -2,11 +2,6 @@ import React, { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-// Helper to ensure we have a THREE.Color from the provided value.
-const toTHREEColor = (col) => {
-  return col instanceof THREE.Color ? col : new THREE.Color(col);
-};
-
 const Particle = ({
   initialPosition,
   dt,
@@ -19,8 +14,10 @@ const Particle = ({
   restartTrigger,
 }) => {
   const meshRef = useRef();
-  // Store the trail as an array of positions (each is [x, y, z])
-  const trail = useRef([initialPosition]);
+  // Fixed-size ring buffer for trail positions.
+  const trailBuffer = useRef(new Float32Array(trailLength * 3));
+  const writeIndexRef = useRef(0);
+  const countRef = useRef(0);
 
   // Pre-allocate buffers for positions and colors.
   const positionsBuffer = useRef(new Float32Array(trailLength * 3));
@@ -28,65 +25,125 @@ const Particle = ({
 
   // Create a BufferGeometry for the trail line.
   const geometryRef = useRef(new THREE.BufferGeometry());
+  const lowColorRef = useRef(new THREE.Color());
+  const highColorRef = useRef(new THREE.Color());
+
+  useEffect(() => {
+    lowColorRef.current.set(lowSpeedColor);
+  }, [lowSpeedColor]);
+
+  useEffect(() => {
+    highColorRef.current.set(highSpeedColor);
+  }, [highSpeedColor]);
+
+  // (Re)initialize buffers when the trail length changes.
+  useEffect(() => {
+    const size = trailLength * 3;
+    trailBuffer.current = new Float32Array(size);
+    positionsBuffer.current = new Float32Array(size);
+    colorsBuffer.current = new Float32Array(size);
+
+    const positionAttribute = new THREE.BufferAttribute(
+      positionsBuffer.current,
+      3
+    );
+    positionAttribute.setUsage(THREE.DynamicDrawUsage);
+    geometryRef.current.setAttribute("position", positionAttribute);
+
+    const colorAttribute = new THREE.BufferAttribute(colorsBuffer.current, 3);
+    colorAttribute.setUsage(THREE.DynamicDrawUsage);
+    geometryRef.current.setAttribute("color", colorAttribute);
+    geometryRef.current.setDrawRange(0, 0);
+
+    // Reset ring state.
+    writeIndexRef.current = 0;
+    countRef.current = 0;
+  }, [trailLength]);
 
   // On restart, reset the particle's position and trail.
   useEffect(() => {
     if (meshRef.current) {
       meshRef.current.position.set(...initialPosition);
-      trail.current = [initialPosition];
-      positionsBuffer.current = new Float32Array(trailLength * 3);
-      colorsBuffer.current = new Float32Array(trailLength * 3);
-      geometryRef.current.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positionsBuffer.current, 3)
-      );
-      geometryRef.current.setAttribute(
-        "color",
-        new THREE.BufferAttribute(colorsBuffer.current, 3)
-      );
+
+      // Seed the trail with the initial position.
+      trailBuffer.current.fill(0);
+      positionsBuffer.current.fill(0);
+      colorsBuffer.current.fill(0);
+      trailBuffer.current[0] = initialPosition[0];
+      trailBuffer.current[1] = initialPosition[1];
+      trailBuffer.current[2] = initialPosition[2];
+
+      writeIndexRef.current = trailLength > 1 ? 1 : 0;
+      countRef.current = 1;
       geometryRef.current.setDrawRange(0, 0);
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
   useFrame(() => {
     if (freeze) return;
+    if (!meshRef.current) return;
+    if (trailLength <= 0) return;
     const pos = meshRef.current.position;
     const [dx, dy, dz] = equation(pos.x, pos.y, pos.z, dt);
-    const newPos = [pos.x + dx, pos.y + dy, pos.z + dz];
-    meshRef.current.position.set(...newPos);
+    const newX = pos.x + dx;
+    const newY = pos.y + dy;
+    const newZ = pos.z + dz;
+    meshRef.current.position.set(newX, newY, newZ);
 
-    // Append new position; keep trail length fixed.
-    trail.current.push(newPos);
-    if (trail.current.length > trailLength) {
-      trail.current.shift();
+    // Write into ring buffer.
+    const writeIndex = writeIndexRef.current;
+    const writeOffset = writeIndex * 3;
+    trailBuffer.current[writeOffset] = newX;
+    trailBuffer.current[writeOffset + 1] = newY;
+    trailBuffer.current[writeOffset + 2] = newZ;
+
+    writeIndexRef.current = (writeIndex + 1) % trailLength;
+    const nextCount = Math.min(countRef.current + 1, trailLength);
+    countRef.current = nextCount;
+
+    // Render in oldest -> newest order into contiguous buffers.
+    const startIndex = nextCount === trailLength ? writeIndexRef.current : 0;
+    geometryRef.current.setDrawRange(0, nextCount);
+
+    const positionAttribute = geometryRef.current.getAttribute("position");
+    const colorAttribute = geometryRef.current.getAttribute("color");
+    if (!positionAttribute || !colorAttribute) return;
+
+    const lowCol = lowColorRef.current;
+    const highCol = highColorRef.current;
+    const dr = highCol.r - lowCol.r;
+    const dg = highCol.g - lowCol.g;
+    const db = highCol.b - lowCol.b;
+
+    for (let i = 0; i < nextCount; i++) {
+      const srcIndex = (startIndex + i) % trailLength;
+      const srcOffset = srcIndex * 3;
+      const dstOffset = i * 3;
+
+      positionsBuffer.current[dstOffset] = trailBuffer.current[srcOffset];
+      positionsBuffer.current[dstOffset + 1] =
+        trailBuffer.current[srcOffset + 1];
+      positionsBuffer.current[dstOffset + 2] =
+        trailBuffer.current[srcOffset + 2];
+
+      const t = nextCount > 1 ? i / (nextCount - 1) : 0;
+      colorsBuffer.current[dstOffset] = lowCol.r + dr * t;
+      colorsBuffer.current[dstOffset + 1] = lowCol.g + dg * t;
+      colorsBuffer.current[dstOffset + 2] = lowCol.b + db * t;
     }
-    const n = trail.current.length;
-    geometryRef.current.setDrawRange(0, n);
 
-    // Update positions buffer in place.
-    for (let i = 0; i < n; i++) {
-      positionsBuffer.current[i * 3] = trail.current[i][0];
-      positionsBuffer.current[i * 3 + 1] = trail.current[i][1];
-      positionsBuffer.current[i * 3 + 2] = trail.current[i][2];
+    if (!positionAttribute.updateRange) {
+      positionAttribute.updateRange = { offset: 0, count: -1 };
     }
-    geometryRef.current.attributes.position.needsUpdate = true;
-
-    // Ensure colors are THREE.Color objects.
-    const lowCol = toTHREEColor(lowSpeedColor);
-    const highCol = toTHREEColor(highSpeedColor);
-
-    // Compute color for each point.
-    for (let i = 0; i < n; i++) {
-      // Calculate t based on the index (oldest=0, tip=1).
-      const t = n > 1 ? i / (n - 1) : 0;
-      // For a speed-based gradient, you could compute t based on speed,
-      // but here we use an index-based gradient. You can mix in speed if desired.
-      const col = lowCol.clone().lerp(highCol, t);
-      colorsBuffer.current[i * 3] = col.r;
-      colorsBuffer.current[i * 3 + 1] = col.g;
-      colorsBuffer.current[i * 3 + 2] = col.b;
+    positionAttribute.updateRange.offset = 0;
+    positionAttribute.updateRange.count = nextCount * 3;
+    positionAttribute.needsUpdate = true;
+    if (!colorAttribute.updateRange) {
+      colorAttribute.updateRange = { offset: 0, count: -1 };
     }
-    geometryRef.current.attributes.color.needsUpdate = true;
+    colorAttribute.updateRange.offset = 0;
+    colorAttribute.updateRange.count = nextCount * 3;
+    colorAttribute.needsUpdate = true;
   });
 
   return (
