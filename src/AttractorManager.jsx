@@ -11,6 +11,7 @@ import DadrasAttractor from "./chaos/attractors/DadrasAttractor";
 import SprottAttractor from "./chaos/attractors/SprottAttractor";
 import BoualiAttractor from "./chaos/attractors/BoualiAttractor";
 import BurkeShawAttractor from "./chaos/attractors/BurkeShawAttractor";
+import RabinovichFabrikantAttractor from "./chaos/attractors/RabinovichFabrikantAttractor";
 
 const AttractorManager = ({ sharedParams }) => {
   const { attractor } = useControls({
@@ -28,6 +29,7 @@ const AttractorManager = ({ sharedParams }) => {
         Sprott: "Sprott",
         Bouali: "Bouali",
         BurkeShaw: "BurkeShaw",
+        RabinovichFabrikant: "RabinovichFabrikant",
       },
       order: -2,
     },
@@ -67,6 +69,9 @@ const AttractorManager = ({ sharedParams }) => {
       )}
       {attractor === "BurkeShaw" && (
         <BurkeShawAttractor sharedParams={sharedParams} />
+      )}
+      {attractor === "RabinovichFabrikant" && (
+        <RabinovichFabrikantAttractor sharedParams={sharedParams} />
       )}
     </>
   );
