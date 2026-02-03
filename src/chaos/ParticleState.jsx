@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import * as THREE from "three";
 
-const Particle = forwardRef(({
+const ParticleState = forwardRef(({
   initialPosition,
   dt,
   trailLength,
@@ -166,6 +166,6 @@ const Particle = forwardRef(({
   return null;
 });
 
-Particle.displayName = "Particle";
+ParticleState.displayName = "ParticleState";
 
-export default Particle;
+export default ParticleState;

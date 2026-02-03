@@ -1,7 +1,8 @@
 import React, { useMemo, useRef, useEffect } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import Particle from "./Particle";
+import ParticleState from "./ParticleState";
 
 const ChaosManager = ({
   Npoints,
@@ -13,6 +14,7 @@ const ChaosManager = ({
   freeze,
   restartTrigger,
 }) => {
+  const { gl } = useThree();
   const particleRefs = useRef([]);
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
@@ -21,6 +23,20 @@ const ChaosManager = ({
   const trailColorsRef = useRef(new Float32Array(0));
   const trailPositionAttrRef = useRef(null);
   const trailColorAttrRef = useRef(null);
+  const supportsUint32Indices = useMemo(() => {
+    if (!gl) return true;
+    return (
+      gl.capabilities?.isWebGL2 ||
+      gl.extensions?.has?.("OES_element_index_uint") === true
+    );
+  }, [gl]);
+
+  const renderTrailLength = useMemo(() => {
+    if (supportsUint32Indices) return trailLength;
+    const maxTrail = Math.floor(65535 / Math.max(Npoints, 1));
+    return Math.max(1, Math.min(trailLength, maxTrail));
+  }, [supportsUint32Indices, trailLength, Npoints]);
+
   const initialPositions = useMemo(() => {
     const positions = [];
     for (let i = 0; i < Npoints; i++) {
@@ -45,7 +61,7 @@ const ChaosManager = ({
   }, [Npoints]);
 
   useEffect(() => {
-    const totalPoints = Npoints * trailLength;
+    const totalPoints = Npoints * renderTrailLength;
     const positions = new Float32Array(totalPoints * 3);
     const colors = new Float32Array(totalPoints * 3);
 
@@ -62,13 +78,15 @@ const ChaosManager = ({
     trailsGeometryRef.current.setAttribute("color", colorAttr);
     trailColorAttrRef.current = colorAttr;
 
-    const segmentCount = Math.max(trailLength - 1, 0) * Npoints;
+    const segmentCount = Math.max(renderTrailLength - 1, 0) * Npoints;
     if (segmentCount > 0) {
-      const indexArray = new Uint32Array(segmentCount * 2);
+      const IndexArrayType =
+        totalPoints <= 65535 ? Uint16Array : Uint32Array;
+      const indexArray = new IndexArrayType(segmentCount * 2);
       let index = 0;
       for (let p = 0; p < Npoints; p++) {
-        const base = p * trailLength;
-        for (let i = 0; i < trailLength - 1; i++) {
+        const base = p * renderTrailLength;
+        for (let i = 0; i < renderTrailLength - 1; i++) {
           indexArray[index++] = base + i;
           indexArray[index++] = base + i + 1;
         }
@@ -81,7 +99,7 @@ const ChaosManager = ({
       trailsGeometryRef.current.setIndex(null);
       trailsGeometryRef.current.setDrawRange(0, 0);
     }
-  }, [Npoints, trailLength]);
+  }, [Npoints, renderTrailLength]);
 
   useEffect(() => {
     const colorAttr = trailColorAttrRef.current;
@@ -95,9 +113,9 @@ const ChaosManager = ({
     const db = highCol.b - lowCol.b;
 
     for (let p = 0; p < Npoints; p++) {
-      const base = p * trailLength;
-      for (let i = 0; i < trailLength; i++) {
-        const t = trailLength > 1 ? i / (trailLength - 1) : 0;
+      const base = p * renderTrailLength;
+      for (let i = 0; i < renderTrailLength; i++) {
+        const t = renderTrailLength > 1 ? i / (renderTrailLength - 1) : 0;
         const offset = (base + i) * 3;
         colors[offset] = lowCol.r + dr * t;
         colors[offset + 1] = lowCol.g + dg * t;
@@ -106,7 +124,7 @@ const ChaosManager = ({
     }
 
     colorAttr.needsUpdate = true;
-  }, [lowSpeedColor, highSpeedColor, trailLength, Npoints]);
+  }, [lowSpeedColor, highSpeedColor, renderTrailLength, Npoints]);
 
   useFrame(() => {
     const refs = particleRefs.current;
@@ -122,7 +140,7 @@ const ChaosManager = ({
         mesh.setMatrixAt(i, tempMatrix.current);
       }
       if (positions.length > 0) {
-        particle?.copyTrailTo?.(positions, i * trailLength * 3);
+        particle?.copyTrailTo?.(positions, i * renderTrailLength * 3);
       }
     }
     if (mesh) {
@@ -135,6 +153,26 @@ const ChaosManager = ({
 
   return (
     <>
+      {renderTrailLength !== trailLength && (
+        <Html fullscreen>
+          <div
+            style={{
+              position: "absolute",
+              top: 12,
+              left: 12,
+              padding: "6px 10px",
+              background: "rgba(0, 0, 0, 0.6)",
+              color: "#fff",
+              fontFamily: "monospace",
+              fontSize: 12,
+              borderRadius: 6,
+              pointerEvents: "none",
+            }}
+          >
+            Trail length clamped to {renderTrailLength} (requested {trailLength})
+          </div>
+        </Html>
+      )}
       <instancedMesh
         key={Npoints}
         ref={sphereMeshRef}
@@ -152,14 +190,14 @@ const ChaosManager = ({
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
       {initialPositions.map((pos, idx) => (
-        <Particle
+        <ParticleState
           key={idx}
           ref={(ref) => {
             particleRefs.current[idx] = ref;
           }}
           initialPosition={pos}
           dt={dt}
-          trailLength={trailLength}
+          trailLength={renderTrailLength}
           equation={equation}
           freeze={freeze}
           restartTrigger={restartTrigger}
