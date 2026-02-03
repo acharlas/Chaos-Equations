@@ -47,7 +47,7 @@ const Scene = () => {
   return (
     <Canvas
       shadows
-      gl={{ antialias: false }}
+      gl={{ antialias: true }}
       dpr={[1, maxDpr]}
       camera={{
         position: [-140, -140, -160],
