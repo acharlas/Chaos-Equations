@@ -283,7 +283,7 @@ const ChaosManager = ({
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
     const gamma = Math.max(
       1e-3,
-      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 2)
+      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4)
     );
     let minColorUpdate = null;
     let maxColorUpdate = null;
