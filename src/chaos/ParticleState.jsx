@@ -116,6 +116,7 @@ const ParticleState = forwardRef(({
       dtLocal,
       wRef.current
     );
+    // dx/dy/dz are deltas (already multiplied by dt), so divide by dt for speed.
     speedRef.current =
       dtLocal !== 0 ? Math.hypot(dx, dy, dz) / dtLocal : 0;
     const newX = pos.x + dx;

@@ -7,8 +7,30 @@ import ParticleState from "./ParticleState";
 const AUTO_SPEED_LOW_PERCENTILE = 10;
 const AUTO_SPEED_HIGH_PERCENTILE = 90;
 const AUTO_SPEED_SMOOTHING = 0.15;
+// Performance policy: update speed range every N frames and sample up to M particles.
+const SPEED_RANGE_UPDATE_INTERVAL = 10;
+const MAX_SPEED_SAMPLES = 2000;
 const DEFAULT_MAX_TRAIL_POINTS = 300000; // Performance budget: Npoints * trailLength.
 const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
+
+const computePercentileRange = (values) => {
+  if (!values || values.length === 0) return null;
+  values.sort((a, b) => a - b);
+  const clampedLow = Math.min(
+    AUTO_SPEED_LOW_PERCENTILE,
+    AUTO_SPEED_HIGH_PERCENTILE - 1
+  );
+  const clampedHigh = Math.max(
+    AUTO_SPEED_HIGH_PERCENTILE,
+    AUTO_SPEED_LOW_PERCENTILE + 1
+  );
+  const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
+  const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
+  const last = values.length - 1;
+  const lowIndex = Math.max(0, Math.floor(last * lowPct));
+  const highIndex = Math.max(0, Math.floor(last * highPct));
+  return { min: values[lowIndex], max: values[highIndex] };
+};
 
 const ChaosManager = ({
   sharedParams,
@@ -42,6 +64,7 @@ const ChaosManager = ({
   const speedSamplesRef = useRef(new Float32Array(0));
   const writeIndexSamplesRef = useRef(new Int32Array(0));
   const speedListRef = useRef([]);
+  const frameCountRef = useRef(0);
   const autoSpeedMinRef = useRef(0);
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
@@ -194,23 +217,10 @@ const ChaosManager = ({
         const s = speeds[i];
         if (Number.isFinite(s)) validSpeeds.push(s);
       }
-      if (validSpeeds.length > 0) {
-        validSpeeds.sort((a, b) => a - b);
-        const clampedLow = Math.min(
-          AUTO_SPEED_LOW_PERCENTILE,
-          AUTO_SPEED_HIGH_PERCENTILE - 1
-        );
-        const clampedHigh = Math.max(
-          AUTO_SPEED_HIGH_PERCENTILE,
-          AUTO_SPEED_LOW_PERCENTILE + 1
-        );
-        const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
-        const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
-        const last = validSpeeds.length - 1;
-        const lowIndex = Math.max(0, Math.floor(last * lowPct));
-        const highIndex = Math.max(0, Math.floor(last * highPct));
-        rangeMin = validSpeeds[lowIndex];
-        rangeMax = validSpeeds[highIndex];
+      const range = computePercentileRange(validSpeeds);
+      if (range) {
+        rangeMin = range.min;
+        rangeMax = range.max;
       }
     }
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
@@ -257,6 +267,12 @@ const ChaosManager = ({
     const speedSamples = speedSamplesRef.current;
     const writeIndexSamples = writeIndexSamplesRef.current;
     const speedList = speedListRef.current;
+    const shouldUpdateRange =
+      frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
+    frameCountRef.current += 1;
+    const sampleStride = shouldUpdateRange
+      ? Math.max(1, Math.floor(refs.length / MAX_SPEED_SAMPLES))
+      : 0;
     const lowCol = lowSpeedColor;
     const highCol = highSpeedColor;
     const dr = highCol.r - lowCol.r;
@@ -287,7 +303,13 @@ const ChaosManager = ({
         speed = Number.isFinite(rawSpeed) ? rawSpeed : 0;
       }
       speedSamples[i] = speed;
-      if (writeIndex !== null && writeIndex >= 0 && Number.isFinite(rawSpeed)) {
+      if (
+        shouldUpdateRange &&
+        writeIndex !== null &&
+        writeIndex >= 0 &&
+        Number.isFinite(rawSpeed) &&
+        i % sampleStride === 0
+      ) {
         speedList.push(rawSpeed);
       }
       if (indexAttr && renderTrailLength > 1 && writeIndex !== null && writeIndex >= 0) {
@@ -338,23 +360,13 @@ const ChaosManager = ({
     let rangeMax = autoRangeInitializedRef.current
       ? autoSpeedMaxRef.current
       : 1;
-    if (speedList.length > 0) {
-      speedList.sort((a, b) => a - b);
-      const clampedLow = Math.min(
-        AUTO_SPEED_LOW_PERCENTILE,
-        AUTO_SPEED_HIGH_PERCENTILE - 1
-      );
-      const clampedHigh = Math.max(
-        AUTO_SPEED_HIGH_PERCENTILE,
-        AUTO_SPEED_LOW_PERCENTILE + 1
-      );
-      const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
-      const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
-      const last = speedList.length - 1;
-      const lowIndex = Math.max(0, Math.floor(last * lowPct));
-      const highIndex = Math.max(0, Math.floor(last * highPct));
-      const frameMin = speedList[lowIndex];
-      const frameMax = speedList[highIndex];
+    if (shouldUpdateRange && speedList.length > 0) {
+      const range = computePercentileRange(speedList);
+      const frameMin = range?.min;
+      const frameMax = range?.max;
+      if (frameMin === undefined || frameMax === undefined) {
+        // keep prior range
+      } else {
       const alpha = Math.min(1, Math.max(0, AUTO_SPEED_SMOOTHING));
       if (!autoRangeInitializedRef.current) {
         autoSpeedMinRef.current = frameMin;
@@ -369,6 +381,7 @@ const ChaosManager = ({
       }
       rangeMin = autoSpeedMinRef.current;
       rangeMax = autoSpeedMaxRef.current;
+      }
     }
     if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax)) {
       rangeMin = 0;
