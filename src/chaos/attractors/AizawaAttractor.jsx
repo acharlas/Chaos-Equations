@@ -37,6 +37,8 @@ const AizawaAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
+  const localScale = 1;
+
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
     [lowSpeedHex]
@@ -51,7 +53,7 @@ const AizawaAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

@@ -33,6 +33,8 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
+  const localScale = 1;
+
   const { a, b, c } = params;
 
   // Convert color hex to THREE.Color
@@ -50,7 +52,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

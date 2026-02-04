@@ -1,8 +1,9 @@
 import React from "react";
 
-const AttractorWrapper = ({ globalScale, children }) => {
+const AttractorWrapper = ({ globalScale, localScale = 1, children }) => {
+  const scale = globalScale * localScale;
   return (
-    <group scale={[globalScale, globalScale, globalScale]}>{children}</group>
+    <group scale={[scale, scale, scale]}>{children}</group>
   );
 };
 
