@@ -12,6 +12,8 @@ const ChaosManager = ({
   equation,
   lowSpeedColor,
   highSpeedColor,
+  speedMin = 0,
+  speedMax = 1,
   freeze,
   restartTrigger,
 }) => {
@@ -129,20 +131,10 @@ const ChaosManager = ({
     if (!colorAttr || colors.length === 0) return;
 
     const lowCol = lowSpeedColor;
-    const highCol = highSpeedColor;
-    const dr = highCol.r - lowCol.r;
-    const dg = highCol.g - lowCol.g;
-    const db = highCol.b - lowCol.b;
-
-    for (let p = 0; p < Npoints; p++) {
-      const base = p * renderTrailLength;
-      for (let i = 0; i < renderTrailLength; i++) {
-        const t = renderTrailLength > 1 ? i / (renderTrailLength - 1) : 0;
-        const offset = (base + i) * 3;
-        colors[offset] = lowCol.r + dr * t;
-        colors[offset + 1] = lowCol.g + dg * t;
-        colors[offset + 2] = lowCol.b + db * t;
-      }
+    for (let i = 0; i < colors.length; i += 3) {
+      colors[i] = lowCol.r;
+      colors[i + 1] = lowCol.g;
+      colors[i + 2] = lowCol.b;
     }
 
     colorAttr.needsUpdate = true;
@@ -153,23 +145,62 @@ const ChaosManager = ({
     const refs = particleRefs.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
+    const colorAttr = trailColorAttrRef.current;
+    const colors = trailColorsRef.current;
     const indexAttr = trailIndexAttrRef.current;
     const steps = Math.max(1, substeps);
+    const dtStep = dt / steps;
     const breakSegments = breakSegmentsRef.current;
+    const lowCol = lowSpeedColor;
+    const highCol = highSpeedColor;
+    const dr = highCol.r - lowCol.r;
+    const dg = highCol.g - lowCol.g;
+    const db = highCol.b - lowCol.b;
+    const speedRange = Math.max(1e-6, speedMax - speedMin);
     let minIndexUpdate = null;
     let maxIndexUpdate = null;
+    let minColorUpdate = null;
+    let maxColorUpdate = null;
     for (let i = 0; i < refs.length; i++) {
       const particle = refs[i];
       let position = null;
       if (particle?.step) {
         for (let s = 0; s < steps; s++) {
-          position = particle.step(s === steps - 1);
+          position = particle.step(s === steps - 1, dtStep);
         }
       }
       if (mesh && position) {
         tempMatrix.current.identity();
         tempMatrix.current.setPosition(position);
         mesh.setMatrixAt(i, tempMatrix.current);
+      }
+      if (
+        colorAttr &&
+        colors.length > 0 &&
+        renderTrailLength > 0 &&
+        particle?.getSpeed &&
+        particle?.getWriteIndex
+      ) {
+        const writeIndex = particle.getWriteIndex();
+        const lastIndex =
+          writeIndex === 0 ? renderTrailLength - 1 : writeIndex - 1;
+        const offset = (i * renderTrailLength + lastIndex) * 3;
+        const speed = particle.getSpeed();
+        const t = Math.min(
+          1,
+          Math.max(0, (speed - speedMin) / speedRange)
+        );
+        colors[offset] = lowCol.r + dr * t;
+        colors[offset + 1] = lowCol.g + dg * t;
+        colors[offset + 2] = lowCol.b + db * t;
+        minColorUpdate =
+          minColorUpdate === null
+            ? offset
+            : Math.min(minColorUpdate, offset);
+        maxColorUpdate =
+          maxColorUpdate === null
+            ? offset + 2
+            : Math.max(maxColorUpdate, offset + 2);
       }
       if (indexAttr && renderTrailLength > 1 && particle?.getWriteIndex) {
         const writeIndex = particle.getWriteIndex();
@@ -223,6 +254,14 @@ const ChaosManager = ({
       indexAttr.updateRange.offset = minIndexUpdate;
       indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate + 1;
       indexAttr.needsUpdate = true;
+    }
+    if (colorAttr && minColorUpdate !== null) {
+      if (!colorAttr.updateRange) {
+        colorAttr.updateRange = { offset: 0, count: -1 };
+      }
+      colorAttr.updateRange.offset = minColorUpdate;
+      colorAttr.updateRange.count = maxColorUpdate - minColorUpdate + 1;
+      colorAttr.needsUpdate = true;
     }
   });
 

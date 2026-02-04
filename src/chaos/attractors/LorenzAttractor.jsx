@@ -21,7 +21,17 @@ const LorenzAttractor = ({ sharedParams }) => {
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
-  const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+  const {
+    dt,
+    substeps,
+    Npoints,
+    trailLength,
+    lowSpeedHex,
+    highSpeedHex,
+    globalScale,
+    speedMin,
+    speedMax,
+  } =
     sharedParams;
 
   const lowSpeedColor = useMemo(
@@ -47,6 +57,8 @@ const LorenzAttractor = ({ sharedParams }) => {
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
+        speedMin={speedMin}
+        speedMax={speedMax}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />
