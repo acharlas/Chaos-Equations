@@ -19,7 +19,7 @@ const CameraResetButton = ({ controlsRef }) => {
           controlsRef.current.reset();
         }
       },
-      { label: "Reset camera" }
+      { label: "Reset Camera" }
     ),
   });
 

@@ -20,10 +20,13 @@ export default function App() {
 
   return (
     <div className="App">
-      <Leva
-        collapsed={isMobileOrTablet}
-        titleBar={{ title: "Control panel", drag: false }}
-      />
+      <div className="leva-panel">
+        <Leva
+          fill
+          collapsed={isMobileOrTablet}
+          titleBar={{ title: "Settings", drag: false }}
+        />
+      </div>
       <Scene />
     </div>
   );
