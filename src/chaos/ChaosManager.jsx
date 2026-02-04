@@ -72,6 +72,10 @@ const ChaosManager = ({
   }, [Npoints]);
 
   useEffect(() => {
+    autoRangeInitializedRef.current = false;
+  }, [restartTrigger]);
+
+  useEffect(() => {
     if (!sphereMeshRef.current) return;
     sphereMeshRef.current.count = Npoints;
     sphereMeshRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -193,12 +197,14 @@ const ChaosManager = ({
       const writeIndex = particle?.getWriteIndex ? particle.getWriteIndex() : -1;
       writeIndexSamples[i] = writeIndex ?? -1;
       let speed = 0;
+      let rawSpeed = 0;
       if (particle?.getSpeed) {
-        speed = particle.getSpeed();
+        rawSpeed = particle.getSpeed();
+        speed = Number.isFinite(rawSpeed) ? rawSpeed : 0;
       }
       speedSamples[i] = speed;
-      if (writeIndex !== null && writeIndex >= 0) {
-        speedList.push(speed);
+      if (writeIndex !== null && writeIndex >= 0 && Number.isFinite(rawSpeed)) {
+        speedList.push(rawSpeed);
       }
       if (indexAttr && renderTrailLength > 1 && writeIndex !== null && writeIndex >= 0) {
         const nextBreak =
@@ -279,6 +285,11 @@ const ChaosManager = ({
       }
       rangeMin = autoSpeedMinRef.current;
       rangeMax = autoSpeedMaxRef.current;
+    }
+    if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax)) {
+      rangeMin = 0;
+      rangeMax = 1;
+      autoRangeInitializedRef.current = false;
     }
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
     const gamma = Math.max(
