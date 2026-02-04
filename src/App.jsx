@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Scene from "./Scene";
 import "./App.css";
 import { Leva } from "leva";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 export default function App() {
   //Should be change to a starting value and then change but somehow Leva don't re-render on resize.
@@ -20,17 +19,15 @@ export default function App() {
   }, []);
 
   return (
-    <TooltipProvider>
-      <div className="App">
-        <div className="leva-panel">
-          <Leva
-            fill
-            collapsed={isMobileOrTablet}
-            titleBar={{ title: "Settings", drag: false }}
-          />
-        </div>
-        <Scene />
+    <div className="App">
+      <div className="leva-panel">
+        <Leva
+          fill
+          collapsed={isMobileOrTablet}
+          titleBar={{ title: "Settings", drag: false }}
+        />
       </div>
-    </TooltipProvider>
+      <Scene />
+    </div>
   );
 }

@@ -30,7 +30,6 @@ export const getSceneControls = () => ({
         max: 0.01,
         step: 0.0001,
         label: "Time Step",
-        hint: "Simulation step size (smaller = more stable)",
       },
       substeps: {
         value: 2,
@@ -38,7 +37,6 @@ export const getSceneControls = () => ({
         max: 6,
         step: 1,
         label: "Substeps",
-        hint: "Extra accuracy per frame (costs performance)",
       },
     },
     { collapsed: false }
@@ -54,7 +52,6 @@ export const getSceneControls = () => ({
         max: 1,
         step: 0.01,
         label: "Speed Color Boost",
-        hint: "Boosts color separation across speeds",
       },
     },
     { collapsed: false }
@@ -74,8 +71,7 @@ export const getSceneControls = () => ({
         min: 50000,
         max: 800000,
         step: 10000,
-        label: "Trail Budget",
-        hint: "Total points = particles × trail length",
+        label: "Trail Budget (particles × trail length)",
       },
     },
     { collapsed: true }
