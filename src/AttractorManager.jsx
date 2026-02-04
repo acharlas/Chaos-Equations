@@ -11,7 +11,6 @@ import DadrasAttractor from "./chaos/attractors/DadrasAttractor";
 import SprottAttractor from "./chaos/attractors/SprottAttractor";
 import BoualiAttractor from "./chaos/attractors/BoualiAttractor";
 import BurkeShawAttractor from "./chaos/attractors/BurkeShawAttractor";
-import RabinovichFabrikantAttractor from "./chaos/attractors/RabinovichFabrikantAttractor";
 import NewtonLeipnikAttractor from "./chaos/attractors/NewtonLeipnikAttractor";
 import NoseHooverAttractor from "./chaos/attractors/NoseHooverAttractor";
 import ArneodoAttractor from "./chaos/attractors/ArneodoAttractor";
@@ -34,7 +33,6 @@ const AttractorManager = ({ sharedParams }) => {
         Sprott: "Sprott",
         Bouali: "Bouali",
         "Burke-Shaw": "BurkeShaw",
-        "Rabinovich-Fabrikant": "RabinovichFabrikant",
         "Newton-Leipnik": "NewtonLeipnik",
         "Nose-Hoover": "NoseHoover",
         Arneodo: "Arneodo",
@@ -78,9 +76,6 @@ const AttractorManager = ({ sharedParams }) => {
       )}
       {attractor === "BurkeShaw" && (
         <BurkeShawAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "RabinovichFabrikant" && (
-        <RabinovichFabrikantAttractor sharedParams={sharedParams} />
       )}
       {attractor === "NewtonLeipnik" && (
         <NewtonLeipnikAttractor sharedParams={sharedParams} />
