@@ -29,6 +29,7 @@ const SprottAttractor = ({ sharedParams }) => {
     highSpeedHex,
     globalScale,
     speedContrast,
+    maxTrailPoints,
   } =
     sharedParams;
 
@@ -57,6 +58,7 @@ const SprottAttractor = ({ sharedParams }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         speedContrast={speedContrast}
+        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

@@ -9,15 +9,15 @@ const ChuaAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const { a, b, k, p, q, r } = useControls({
+  const { aParam, bParam, kParam, pParam, qParam, rParam } = useControls({
     Chua: folder(
       {
-        a: { value: 0.1, min: 0, max: 1, step: 0.01 },
-        b: { value: -0.48, min: -2, max: 0, step: 0.01 },
-        k: { value: 1, min: 0, max: 2, step: 0.01 },
-        p: { value: -1.3, min: -3, max: 0, step: 0.01 },
-        q: { value: -0.0136, min: -0.1, max: 0, step: 0.0001 },
-        r: { value: -0.0297, min: -0.1, max: 0, step: 0.0001 },
+        aParam: { value: 0.1, min: 0, max: 1, step: 0.01, label: "a" },
+        bParam: { value: -0.48, min: -2, max: 0, step: 0.01, label: "b" },
+        kParam: { value: 1, min: 0, max: 2, step: 0.01, label: "k" },
+        pParam: { value: -1.3, min: -3, max: 0, step: 0.01, label: "p" },
+        qParam: { value: -0.0136, min: -0.1, max: 0, step: 0.0001, label: "q" },
+        rParam: { value: -0.0297, min: -0.1, max: 0, step: 0.0001, label: "r" },
       },
       { order: -1 }
     ),
@@ -34,8 +34,16 @@ const ChuaAttractor = ({ sharedParams }) => {
     highSpeedHex,
     globalScale,
     speedContrast,
+    maxTrailPoints,
   } =
     sharedParams;
+
+  const a = aParam;
+  const b = bParam;
+  const k = kParam;
+  const p = pParam;
+  const q = qParam;
+  const r = rParam;
 
 
   const lowSpeedColor = useMemo(
@@ -62,6 +70,7 @@ const ChuaAttractor = ({ sharedParams }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         speedContrast={speedContrast}
+        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

@@ -31,6 +31,7 @@ const RosslerAttractor = ({ sharedParams }) => {
     highSpeedHex,
     globalScale,
     speedContrast,
+    maxTrailPoints,
   } =
     sharedParams;
 
@@ -59,6 +60,7 @@ const RosslerAttractor = ({ sharedParams }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         speedContrast={speedContrast}
+        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

@@ -30,6 +30,7 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
     highSpeedHex,
     globalScale,
     speedContrast,
+    maxTrailPoints,
   } =
     sharedParams;
 
@@ -58,6 +59,7 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         speedContrast={speedContrast}
+        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

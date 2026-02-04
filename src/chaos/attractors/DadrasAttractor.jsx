@@ -33,6 +33,7 @@ const DadrasAttractor = ({ sharedParams }) => {
     highSpeedHex,
     globalScale,
     speedContrast,
+    maxTrailPoints,
   } =
     sharedParams;
 
@@ -61,6 +62,7 @@ const DadrasAttractor = ({ sharedParams }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         speedContrast={speedContrast}
+        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />
