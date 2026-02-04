@@ -43,7 +43,7 @@ const ParticleState = forwardRef(({
 
   useEffect(() => {
     trailLengthRef.current = trailLength;
-  }, [trailLength, particleIndex, totalParticles]);
+  }, [trailLength]);
 
   useEffect(() => {
     trailTargetRef.current = trailTarget;
@@ -57,7 +57,7 @@ const ParticleState = forwardRef(({
     totalParticlesRef.current = totalParticles;
   }, [totalParticles]);
 
-  // (Re)initialize buffer when the trail length changes.
+  // (Re)initialize buffer when the trail layout changes.
   useEffect(() => {
     const pos = positionRef.current;
     const targetRef = trailTargetRef.current;
@@ -72,7 +72,7 @@ const ParticleState = forwardRef(({
         target[base + 2] = pos.z;
       }
     }
-  }, [trailLength]);
+  }, [trailLength, particleIndex, totalParticles]);
 
   // On restart, reset the particle's position and trail.
   useEffect(() => {
@@ -128,11 +128,7 @@ const ParticleState = forwardRef(({
       const particle = particleIndexRef.current;
       const total = totalParticlesRef.current;
       if (target && total > 0 && typeof writeIndex === "number") {
-        const safeIndex =
-          writeIndex < 0
-            ? 0
-            : writeIndex % Math.max(1, currentTrailLength);
-        const baseOffset = (safeIndex * total + particle) * 3;
+        const baseOffset = (writeIndex * total + particle) * 3;
         target[baseOffset] = newX;
         target[baseOffset + 1] = newY;
         target[baseOffset + 2] = newZ;
