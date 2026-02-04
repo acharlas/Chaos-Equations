@@ -25,25 +25,17 @@ const ChuaAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-    maxTrailPoints,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
 
-  const a = aParam;
-  const b = bParam;
-  const k = kParam;
-  const p = pParam;
-  const q = qParam;
-  const r = rParam;
+  const params = {
+    a: aParam,
+    b: bParam,
+    k: kParam,
+    p: pParam,
+    q: qParam,
+    r: rParam,
+  };
+
 
 
   const lowSpeedColor = useMemo(
@@ -56,21 +48,16 @@ const ChuaAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, { a, b, k, p, q, r });
+    return ChuaEquation(x, y, z, dtLocal, params);
   };
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Chua">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
-        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

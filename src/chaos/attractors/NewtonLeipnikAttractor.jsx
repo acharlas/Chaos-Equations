@@ -21,18 +21,7 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-    maxTrailPoints,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
 
 
   const lowSpeedColor = useMemo(
@@ -51,15 +40,10 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="NewtonLeipnik">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
-        maxTrailPoints={maxTrailPoints}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

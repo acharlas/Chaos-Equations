@@ -11,19 +11,23 @@ const DEFAULT_MAX_TRAIL_POINTS = 300000; // Performance budget: Npoints * trailL
 const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
 
 const ChaosManager = ({
-  Npoints,
-  trailLength,
-  dt,
-  substeps = 1,
+  sharedParams,
   equation,
   lowSpeedColor,
   highSpeedColor,
-  speedContrast = 0.5,
-  maxTrailPoints = DEFAULT_MAX_TRAIL_POINTS,
   freeze,
   restartTrigger,
 }) => {
   const { gl } = useThree();
+  if (!sharedParams) {
+    throw new Error("ChaosManager requires sharedParams.");
+  }
+  const Npoints = sharedParams?.Npoints ?? 0;
+  const trailLength = sharedParams?.trailLength ?? 0;
+  const dt = sharedParams?.dt ?? 0.005;
+  const substeps = sharedParams?.substeps ?? 1;
+  const speedContrast = sharedParams?.speedContrast ?? 0.5;
+  const maxTrailPoints = sharedParams?.maxTrailPoints ?? DEFAULT_MAX_TRAIL_POINTS;
   const particleRefs = useRef([]);
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
