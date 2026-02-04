@@ -157,7 +157,6 @@ const ChaosManager = ({
   useEffect(() => {
     const colorAttr = trailColorAttrRef.current;
     const colors = trailColorsRef.current;
-    const trailSpeeds = trailSpeedsRef.current;
     if (!colorAttr || colors.length === 0) return;
 
     const lowCol = lowSpeedColor;
@@ -171,6 +170,31 @@ const ChaosManager = ({
     if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax)) {
       rangeMin = 0;
       rangeMax = 1;
+    }
+    if (!autoRangeInitializedRef.current && speeds.length > 0) {
+      const validSpeeds = [];
+      for (let i = 0; i < speeds.length; i++) {
+        const s = speeds[i];
+        if (Number.isFinite(s)) validSpeeds.push(s);
+      }
+      if (validSpeeds.length > 0) {
+        validSpeeds.sort((a, b) => a - b);
+        const clampedLow = Math.min(
+          AUTO_SPEED_LOW_PERCENTILE,
+          AUTO_SPEED_HIGH_PERCENTILE - 1
+        );
+        const clampedHigh = Math.max(
+          AUTO_SPEED_HIGH_PERCENTILE,
+          AUTO_SPEED_LOW_PERCENTILE + 1
+        );
+        const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
+        const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
+        const last = validSpeeds.length - 1;
+        const lowIndex = Math.max(0, Math.floor(last * lowPct));
+        const highIndex = Math.max(0, Math.floor(last * highPct));
+        rangeMin = validSpeeds[lowIndex];
+        rangeMax = validSpeeds[highIndex];
+      }
     }
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
     const gamma = Math.max(
