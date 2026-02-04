@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "1.0.5",
     "@react-three/drei": "^10.0.5",
     "@react-three/fiber": "^9.1.0",
     "leva": "^0.10.0",
