@@ -33,7 +33,6 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const { a, b, c } = params;
 
@@ -52,7 +51,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

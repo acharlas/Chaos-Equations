@@ -32,7 +32,6 @@ const SprottAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -48,7 +47,7 @@ const SprottAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Sprott">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

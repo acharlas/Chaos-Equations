@@ -9,13 +9,15 @@ const ChuaAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const { a, b, m0, m1 } = useControls({
+  const { a, b, k, p, q, r } = useControls({
     Chua: folder(
       {
-        a: { value: 15.6, min: 10, max: 20, step: 0.1 },
-        b: { value: 28, min: 20, max: 35, step: 0.5 },
-        m0: { value: -1.143, min: -1.6, max: -0.6, step: 0.001 },
-        m1: { value: -0.714, min: -1.2, max: -0.4, step: 0.001 },
+        a: { value: 0.1, min: 0, max: 1, step: 0.01 },
+        b: { value: -0.48, min: -2, max: 0, step: 0.01 },
+        k: { value: 1, min: 0, max: 2, step: 0.01 },
+        p: { value: -1.3, min: -3, max: 0, step: 0.01 },
+        q: { value: -0.0136, min: -0.1, max: 0, step: 0.0001 },
+        r: { value: -0.0297, min: -0.1, max: 0, step: 0.0001 },
       },
       { order: -1 }
     ),
@@ -35,7 +37,6 @@ const ChuaAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -47,11 +48,11 @@ const ChuaAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, { a, b, m0, m1 });
+    return ChuaEquation(x, y, z, dtLocal, { a, b, k, p, q, r });
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Chua">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

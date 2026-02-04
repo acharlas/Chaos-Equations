@@ -33,7 +33,6 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -76,7 +75,7 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="RabinovichFabrikant">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

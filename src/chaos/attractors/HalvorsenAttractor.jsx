@@ -32,7 +32,6 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -48,7 +47,7 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

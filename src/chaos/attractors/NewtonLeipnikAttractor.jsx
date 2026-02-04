@@ -33,7 +33,6 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
   } =
     sharedParams;
 
-  const localScale = 1;
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -49,7 +48,7 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} localScale={localScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="NewtonLeipnik">
       <ChaosManager
         Npoints={Npoints}
         trailLength={trailLength}

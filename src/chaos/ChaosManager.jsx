@@ -479,7 +479,7 @@ const ChaosManager = ({
         ref={sphereMeshRef}
         args={[null, null, Npoints]}
       >
-        <sphereGeometry args={[0.05, 16, 16]} />
+        <sphereGeometry args={[0.01, 16, 16]} />
         <meshBasicMaterial
           color={highSpeedColor}
           transparent={true}
