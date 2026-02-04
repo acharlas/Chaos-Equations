@@ -29,8 +29,7 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
     lowSpeedHex,
     highSpeedHex,
     globalScale,
-    speedMin,
-    speedMax,
+    speedContrast,
   } =
     sharedParams;
 
@@ -57,8 +56,7 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedMin={speedMin}
-        speedMax={speedMax}
+        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

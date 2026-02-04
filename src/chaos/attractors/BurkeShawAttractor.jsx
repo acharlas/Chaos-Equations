@@ -29,8 +29,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     lowSpeedHex,
     highSpeedHex,
     globalScale,
-    speedMin,
-    speedMax,
+    speedContrast,
   } =
     sharedParams;
 
@@ -57,8 +56,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedMin={speedMin}
-        speedMax={speedMax}
+        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />
