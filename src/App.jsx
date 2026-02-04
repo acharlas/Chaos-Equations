@@ -4,11 +4,14 @@ import "./App.css";
 import { Leva } from "leva";
 
 export default function App() {
-  //Should be change to a starting value and then change but somehow Leva don't re-render on resize.
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    window.innerWidth < 1024
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
   );
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     const checkScreenSize = () => {
       setIsMobileOrTablet(window.innerWidth < 1024);
     };
