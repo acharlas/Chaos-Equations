@@ -12,8 +12,8 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   const { a, b } = useControls({
     BurkeShaw: folder(
       {
-        a: { value: 10, min: 0, max: 20, step: 0.1 },
-        b: { value: 13, min: 0, max: 20, step: 0.1 },
+        a: { value: 10, min: 5, max: 18, step: 0.1 },
+        b: { value: 13, min: 5, max: 18, step: 0.1 },
       },
       { order: -1 }
     ),
@@ -21,17 +21,8 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -47,16 +38,12 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

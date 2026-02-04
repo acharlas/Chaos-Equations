@@ -12,7 +12,7 @@ const NoseHooverAttractor = ({ sharedParams }) => {
   const { a } = useControls({
     NoseHoover: folder(
       {
-        a: { value: 1.5, min: 0, max: 5, step: 0.01 },
+        a: { value: 1.5, min: 0.5, max: 3, step: 0.01 },
       },
       { order: -1 }
     ),
@@ -20,17 +20,8 @@ const NoseHooverAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -46,16 +37,12 @@ const NoseHooverAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

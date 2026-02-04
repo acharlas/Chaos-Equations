@@ -12,7 +12,7 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   const { a } = useControls({
     Halvorsen: folder(
       {
-        a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
+        a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 },
       },
       { order: -1 }
     ),
@@ -20,17 +20,8 @@ const HalvorsenAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -46,16 +37,12 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

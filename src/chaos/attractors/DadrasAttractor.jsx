@@ -12,11 +12,11 @@ const DadrasAttractor = ({ sharedParams }) => {
   const { a, b, c, d, e } = useControls({
     Dadras: folder(
       {
-        a: { value: 3, min: 0, max: 6, step: 0.1 },
-        b: { value: 2.7, min: 0, max: 5, step: 0.1 },
-        c: { value: 1.7, min: 0, max: 5, step: 0.1 },
-        d: { value: 2, min: 0, max: 5, step: 0.1 },
-        e: { value: 9, min: 0, max: 15, step: 0.1 },
+        a: { value: 3, min: 1, max: 5, step: 0.1 },
+        b: { value: 2.7, min: 1, max: 4, step: 0.1 },
+        c: { value: 1.7, min: 1, max: 3, step: 0.1 },
+        d: { value: 2, min: 1, max: 3, step: 0.1 },
+        e: { value: 9, min: 5, max: 12, step: 0.1 },
       },
       { order: -1 }
     ),
@@ -24,17 +24,8 @@ const DadrasAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -50,16 +41,12 @@ const DadrasAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Dadras">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

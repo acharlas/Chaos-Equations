@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Canvas, extend } from "@react-three/fiber";
 import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
-import { folder, useControls } from "leva";
+import { useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
@@ -10,9 +10,7 @@ import { getSceneControls } from "./controls/SceneControls";
 extend({ UnrealBloomPass });
 
 const Scene = () => {
-  const Scene = useControls({
-    Scene: folder(getSceneControls()),
-  });
+  const Scene = useControls(getSceneControls());
 
   const controlsRef = useRef();
 
@@ -28,6 +26,7 @@ const Scene = () => {
     showStats,
     showStars,
     maxDpr,
+    maxTrailPoints,
 
     bloom,
     bloom_threshold,
@@ -44,6 +43,7 @@ const Scene = () => {
     highSpeedHex,
     speedContrast,
     globalScale,
+    maxTrailPoints,
   };
 
   return (

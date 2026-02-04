@@ -12,9 +12,9 @@ const RosslerAttractor = ({ sharedParams }) => {
   const { a, b, c } = useControls({
     Rossler: folder(
       {
-        a: { value: 0.2, min: 0, max: 0.5, step: 0.01 },
-        b: { value: 0.2, min: 0, max: 0.5, step: 0.01 },
-        c: { value: 5.7, min: 1, max: 10, step: 0.1 },
+        a: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
+        b: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
+        c: { value: 5.7, min: 2, max: 10, step: 0.1 },
       },
       { order: -1 }
     ),
@@ -22,17 +22,8 @@ const RosslerAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -48,16 +39,12 @@ const RosslerAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Rossler">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

@@ -9,13 +9,15 @@ const ChuaAttractor = ({ sharedParams }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
-  const { a, b, m0, m1 } = useControls({
+  const { aParam, bParam, kParam, pParam, qParam, rParam } = useControls({
     Chua: folder(
       {
-        a: { value: 15.6, min: 5, max: 25, step: 0.1 },
-        b: { value: 28, min: 10, max: 40, step: 0.5 },
-        m0: { value: -1.143, min: -2, max: 0, step: 0.001 },
-        m1: { value: -0.714, min: -2, max: 0, step: 0.001 },
+        aParam: { value: 0.1, min: 0, max: 1, step: 0.01, label: "a" },
+        bParam: { value: -0.48, min: -2, max: 0, step: 0.01, label: "b" },
+        kParam: { value: 1, min: 0, max: 2, step: 0.01, label: "k" },
+        pParam: { value: -1.3, min: -3, max: 0, step: 0.01, label: "p" },
+        qParam: { value: -0.0136, min: -0.1, max: 0, step: 0.0001, label: "q" },
+        rParam: { value: -0.0297, min: -0.1, max: 0, step: 0.0001, label: "r" },
       },
       { order: -1 }
     ),
@@ -23,17 +25,18 @@ const ChuaAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
+  const params = {
+    a: aParam,
+    b: bParam,
+    k: kParam,
+    p: pParam,
+    q: qParam,
+    r: rParam,
+  };
+
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -45,20 +48,16 @@ const ChuaAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, { a, b, m0, m1 });
+    return ChuaEquation(x, y, z, dtLocal, params);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Chua">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

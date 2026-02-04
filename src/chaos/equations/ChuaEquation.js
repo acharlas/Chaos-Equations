@@ -1,9 +1,9 @@
 export const ChuaEquation = (x, y, z, dt, params) => {
-  const { a, b, m0, m1 } = params;
-  const h =
-    m1 * x + 0.5 * (m0 - m1) * (Math.abs(x + 1) - Math.abs(x - 1));
-  const dx = a * (y - x - h) * dt;
-  const dy = (x - y + z) * dt;
-  const dz = (-b * y) * dt;
+  const { a, b, k, p, q, r } = params;
+  const nonlinearity =
+    b * x + 0.5 * (a - b) * (Math.abs(x + 1) - Math.abs(x - 1));
+  const dx = k * p * (y - x - nonlinearity) * dt;
+  const dy = k * (x - y + z) * dt;
+  const dz = k * (-q * y - r * z) * dt;
   return [dx, dy, dz];
 };

@@ -12,8 +12,8 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   const { alpha, gamma } = useControls({
     RabinovichFabrikant: folder(
       {
-        alpha: { value: 0.14, min: 0.01, max: 1, step: 0.01 },
-        gamma: { value: 0.1, min: 0, max: 1, step: 0.01 },
+        alpha: { value: 0.14, min: 0.05, max: 0.4, step: 0.01 },
+        gamma: { value: 0.10, min: 0, max: 0.2, step: 0.01 },
       },
       { order: -1 }
     ),
@@ -21,17 +21,8 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -43,20 +34,43 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   );
 
   const equation = (x, y, z, dtLocal) => {
-    return RabinovichFabrikantEquation(x, y, z, dtLocal, { alpha, gamma });
+    const k1 = RabinovichFabrikantEquation(x, y, z, dtLocal, { alpha, gamma });
+    const k2 = RabinovichFabrikantEquation(
+      x + k1[0] * 0.5,
+      y + k1[1] * 0.5,
+      z + k1[2] * 0.5,
+      dtLocal,
+      { alpha, gamma }
+    );
+    const k3 = RabinovichFabrikantEquation(
+      x + k2[0] * 0.5,
+      y + k2[1] * 0.5,
+      z + k2[2] * 0.5,
+      dtLocal,
+      { alpha, gamma }
+    );
+    const k4 = RabinovichFabrikantEquation(
+      x + k3[0],
+      y + k3[1],
+      z + k3[2],
+      dtLocal,
+      { alpha, gamma }
+    );
+
+    return [
+      (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6,
+      (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6,
+      (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6,
+    ];
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="RabinovichFabrikant">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

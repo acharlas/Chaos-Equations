@@ -1,8 +1,13 @@
 import React from "react";
+import { getLocalScale } from "./attractorScales";
 
-const AttractorWrapper = ({ globalScale, children }) => {
+// globalScale: user-controlled overall scale
+// localScale: per-attractor baseline to normalize sizes
+const AttractorWrapper = ({ globalScale, attractorId, localScale, children }) => {
+  const resolvedLocalScale = localScale ?? getLocalScale(attractorId);
+  const scale = globalScale * resolvedLocalScale;
   return (
-    <group scale={[globalScale, globalScale, globalScale]}>{children}</group>
+    <group scale={[scale, scale, scale]}>{children}</group>
   );
 };
 

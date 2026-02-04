@@ -12,8 +12,8 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   const params = useControls({
     ChenLee: folder(
       {
-        a: { value: 0.9, min: -20, max: 20, step: 0.1 },
-        b: { value: -3, min: -20, max: 20, step: 0.1 },
+        a: { value: 0.9, min: 0, max: 5, step: 0.1 },
+        b: { value: -3, min: -10, max: 0, step: 0.1 },
         c: { value: -0.38, min: -1, max: 1, step: 0.01 },
       },
       { order: -1 }
@@ -21,17 +21,8 @@ const ChenLeeAttractor = ({ sharedParams }) => {
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const { a, b, c } = params;
 
@@ -50,16 +41,12 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

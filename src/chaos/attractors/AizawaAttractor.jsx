@@ -12,12 +12,12 @@ const AizawaAttractor = ({ sharedParams }) => {
   const { a, b, c, d, e, f } = useControls({
     Aizawa: folder(
       {
-        a: { value: 0.95, min: 0, max: 2, step: 0.01 },
-        b: { value: 0.7, min: 0, max: 2, step: 0.01 },
-        c: { value: 0.6, min: 0, max: 2, step: 0.01 },
-        d: { value: 3.5, min: 0, max: 10, step: 0.1 },
-        e: { value: 0.25, min: 0, max: 1, step: 0.01 },
-        f: { value: 0.1, min: 0, max: 1, step: 0.01 },
+        a: { value: 0.95, min: 0, max: 1.5, step: 0.01 },
+        b: { value: 0.7, min: 0, max: 1.5, step: 0.01 },
+        c: { value: 0.6, min: 0, max: 1.5, step: 0.01 },
+        d: { value: 3.5, min: 0, max: 6, step: 0.1 },
+        e: { value: 0.25, min: 0, max: 0.8, step: 0.01 },
+        f: { value: 0.1, min: 0, max: 0.8, step: 0.01 },
       },
       { order: -1 }
     ),
@@ -25,17 +25,8 @@ const AizawaAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const {
-    dt,
-    substeps,
-    Npoints,
-    trailLength,
-    lowSpeedHex,
-    highSpeedHex,
-    globalScale,
-    speedContrast,
-  } =
-    sharedParams;
+  const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
+
 
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
@@ -51,16 +42,12 @@ const AizawaAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale}>
+    <AttractorWrapper globalScale={globalScale} attractorId="Aizawa">
       <ChaosManager
-        Npoints={Npoints}
-        trailLength={trailLength}
-        dt={dt}
-        substeps={substeps}
         equation={equation}
+        sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
-        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />
