@@ -59,7 +59,7 @@ const Scene = () => {
       }}
     >
       {showStars && <Stars radius={1200} depth={1} />}
-      {showStats && <Stats />}
+      {showStats && <Stats className="stats-panel" />}
       <AttractorManager sharedParams={sharedParams} />
       {bloom && (
         <Effects disableGamma>

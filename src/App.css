@@ -24,3 +24,11 @@
     right: 0;
   }
 }
+
+.stats-panel {
+  left: 0 !important;
+  right: auto !important;
+  top: auto !important;
+  bottom: 0 !important;
+  z-index: 1000 !important;
+}
