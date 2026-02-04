@@ -21,7 +21,16 @@ const ChenLeeAttractor = ({ sharedParams }) => {
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
-  const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+  const {
+    dt,
+    substeps,
+    Npoints,
+    trailLength,
+    lowSpeedHex,
+    highSpeedHex,
+    globalScale,
+    speedContrast,
+  } =
     sharedParams;
 
   const { a, b, c } = params;
@@ -50,6 +59,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
+        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

@@ -4,6 +4,10 @@ import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import ParticleState from "./ParticleState";
 
+const AUTO_SPEED_LOW_PERCENTILE = 10;
+const AUTO_SPEED_HIGH_PERCENTILE = 90;
+const AUTO_SPEED_SMOOTHING = 0.15;
+
 const ChaosManager = ({
   Npoints,
   trailLength,
@@ -12,6 +16,7 @@ const ChaosManager = ({
   equation,
   lowSpeedColor,
   highSpeedColor,
+  speedContrast = 0.5,
   freeze,
   restartTrigger,
 }) => {
@@ -26,6 +31,12 @@ const ChaosManager = ({
   const trailColorAttrRef = useRef(null);
   const trailIndexAttrRef = useRef(null);
   const breakSegmentsRef = useRef([]);
+  const speedSamplesRef = useRef(new Float32Array(0));
+  const writeIndexSamplesRef = useRef(new Int32Array(0));
+  const speedListRef = useRef([]);
+  const autoSpeedMinRef = useRef(0);
+  const autoSpeedMaxRef = useRef(1);
+  const autoRangeInitializedRef = useRef(false);
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -55,6 +66,9 @@ const ChaosManager = ({
   useEffect(() => {
     particleRefs.current = particleRefs.current.slice(0, Npoints);
     breakSegmentsRef.current = new Array(Npoints).fill(-1);
+    speedSamplesRef.current = new Float32Array(Npoints);
+    writeIndexSamplesRef.current = new Int32Array(Npoints).fill(-1);
+    autoRangeInitializedRef.current = false;
   }, [Npoints]);
 
   useEffect(() => {
@@ -87,7 +101,8 @@ const ChaosManager = ({
     trailsGeometryRef.current.setAttribute("color", colorAttr);
     trailColorAttrRef.current = colorAttr;
 
-    const segmentCount = Math.max(renderTrailLength - 1, 0) * Npoints;
+    const segmentCount =
+      renderTrailLength > 1 ? renderTrailLength * Npoints : 0;
     if (segmentCount > 0) {
       const IndexArrayType =
         totalPoints <= 65535 ? Uint16Array : Uint32Array;
@@ -95,9 +110,11 @@ const ChaosManager = ({
       let index = 0;
       for (let p = 0; p < Npoints; p++) {
         const base = p * renderTrailLength;
-        for (let i = 0; i < renderTrailLength - 1; i++) {
-          indexArray[index++] = base + i;
-          indexArray[index++] = base + i + 1;
+        for (let i = 0; i < renderTrailLength; i++) {
+          const a = base + i;
+          const b = base + ((i + 1) % renderTrailLength);
+          indexArray[index++] = a;
+          indexArray[index++] = b;
         }
       }
       const indexAttr = new THREE.BufferAttribute(indexArray, 1);
@@ -129,20 +146,10 @@ const ChaosManager = ({
     if (!colorAttr || colors.length === 0) return;
 
     const lowCol = lowSpeedColor;
-    const highCol = highSpeedColor;
-    const dr = highCol.r - lowCol.r;
-    const dg = highCol.g - lowCol.g;
-    const db = highCol.b - lowCol.b;
-
-    for (let p = 0; p < Npoints; p++) {
-      const base = p * renderTrailLength;
-      for (let i = 0; i < renderTrailLength; i++) {
-        const t = renderTrailLength > 1 ? i / (renderTrailLength - 1) : 0;
-        const offset = (base + i) * 3;
-        colors[offset] = lowCol.r + dr * t;
-        colors[offset + 1] = lowCol.g + dg * t;
-        colors[offset + 2] = lowCol.b + db * t;
-      }
+    for (let i = 0; i < colors.length; i += 3) {
+      colors[i] = lowCol.r;
+      colors[i + 1] = lowCol.g;
+      colors[i + 2] = lowCol.b;
     }
 
     colorAttr.needsUpdate = true;
@@ -153,17 +160,29 @@ const ChaosManager = ({
     const refs = particleRefs.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
+    const colorAttr = trailColorAttrRef.current;
+    const colors = trailColorsRef.current;
     const indexAttr = trailIndexAttrRef.current;
     const steps = Math.max(1, substeps);
+    const dtStep = dt / steps;
     const breakSegments = breakSegmentsRef.current;
+    const speedSamples = speedSamplesRef.current;
+    const writeIndexSamples = writeIndexSamplesRef.current;
+    const speedList = speedListRef.current;
+    const lowCol = lowSpeedColor;
+    const highCol = highSpeedColor;
+    const dr = highCol.r - lowCol.r;
+    const dg = highCol.g - lowCol.g;
+    const db = highCol.b - lowCol.b;
     let minIndexUpdate = null;
     let maxIndexUpdate = null;
+    speedList.length = 0;
     for (let i = 0; i < refs.length; i++) {
       const particle = refs[i];
       let position = null;
       if (particle?.step) {
         for (let s = 0; s < steps; s++) {
-          position = particle.step(s === steps - 1);
+          position = particle.step(s === steps - 1, dtStep);
         }
       }
       if (mesh && position) {
@@ -171,18 +190,31 @@ const ChaosManager = ({
         tempMatrix.current.setPosition(position);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      if (indexAttr && renderTrailLength > 1 && particle?.getWriteIndex) {
-        const writeIndex = particle.getWriteIndex();
-        const nextBreak = writeIndex === 0 ? -1 : writeIndex - 1;
+      const writeIndex = particle?.getWriteIndex ? particle.getWriteIndex() : -1;
+      writeIndexSamples[i] = writeIndex ?? -1;
+      let speed = 0;
+      if (particle?.getSpeed) {
+        speed = particle.getSpeed();
+      }
+      speedSamples[i] = speed;
+      if (writeIndex !== null && writeIndex >= 0) {
+        speedList.push(speed);
+      }
+      if (indexAttr && renderTrailLength > 1 && writeIndex !== null && writeIndex >= 0) {
+        const nextBreak =
+          renderTrailLength > 1
+            ? (writeIndex - 1 + renderTrailLength) % renderTrailLength
+            : -1;
         const prevBreak = breakSegments[i] ?? -1;
         if (prevBreak !== nextBreak) {
           const baseVertex = i * renderTrailLength;
-          const baseSegmentOffset = i * (renderTrailLength - 1) * 2;
+          const baseSegmentOffset = i * renderTrailLength * 2;
           const indexArray = indexAttr.array;
           if (prevBreak >= 0) {
             const restoreOffset = baseSegmentOffset + prevBreak * 2;
             indexArray[restoreOffset] = baseVertex + prevBreak;
-            indexArray[restoreOffset + 1] = baseVertex + prevBreak + 1;
+            indexArray[restoreOffset + 1] =
+              baseVertex + ((prevBreak + 1) % renderTrailLength);
             minIndexUpdate =
               minIndexUpdate === null
                 ? restoreOffset
@@ -210,8 +242,82 @@ const ChaosManager = ({
         }
       }
     }
+    let rangeMin = autoRangeInitializedRef.current
+      ? autoSpeedMinRef.current
+      : 0;
+    let rangeMax = autoRangeInitializedRef.current
+      ? autoSpeedMaxRef.current
+      : 1;
+    if (speedList.length > 0) {
+      speedList.sort((a, b) => a - b);
+      const clampedLow = Math.min(
+        AUTO_SPEED_LOW_PERCENTILE,
+        AUTO_SPEED_HIGH_PERCENTILE - 1
+      );
+      const clampedHigh = Math.max(
+        AUTO_SPEED_HIGH_PERCENTILE,
+        AUTO_SPEED_LOW_PERCENTILE + 1
+      );
+      const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
+      const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
+      const last = speedList.length - 1;
+      const lowIndex = Math.max(0, Math.floor(last * lowPct));
+      const highIndex = Math.max(0, Math.floor(last * highPct));
+      const frameMin = speedList[lowIndex];
+      const frameMax = speedList[highIndex];
+      const alpha = Math.min(1, Math.max(0, AUTO_SPEED_SMOOTHING));
+      if (!autoRangeInitializedRef.current) {
+        autoSpeedMinRef.current = frameMin;
+        autoSpeedMaxRef.current = frameMax;
+        autoRangeInitializedRef.current = true;
+      } else {
+        autoSpeedMinRef.current += (frameMin - autoSpeedMinRef.current) * alpha;
+        autoSpeedMaxRef.current += (frameMax - autoSpeedMaxRef.current) * alpha;
+      }
+      if (autoSpeedMaxRef.current <= autoSpeedMinRef.current + 1e-6) {
+        autoSpeedMaxRef.current = autoSpeedMinRef.current + 1e-6;
+      }
+      rangeMin = autoSpeedMinRef.current;
+      rangeMax = autoSpeedMaxRef.current;
+    }
+    const speedRange = Math.max(1e-6, rangeMax - rangeMin);
+    const gamma = Math.max(
+      1e-3,
+      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4)
+    );
+    let minColorUpdate = null;
+    let maxColorUpdate = null;
+    if (colorAttr && colors.length > 0 && renderTrailLength > 0) {
+      for (let i = 0; i < refs.length; i++) {
+        const writeIndex = writeIndexSamples[i];
+        if (writeIndex < 0) continue;
+        const lastIndex =
+          writeIndex === 0 ? renderTrailLength - 1 : writeIndex - 1;
+        const offset = (i * renderTrailLength + lastIndex) * 3;
+        const speed = speedSamples[i];
+        const tRaw = Math.min(
+          1,
+          Math.max(0, (speed - rangeMin) / speedRange)
+        );
+        const t = gamma === 1 ? tRaw : Math.pow(tRaw, gamma);
+        colors[offset] = lowCol.r + dr * t;
+        colors[offset + 1] = lowCol.g + dg * t;
+        colors[offset + 2] = lowCol.b + db * t;
+        minColorUpdate =
+          minColorUpdate === null
+            ? offset
+            : Math.min(minColorUpdate, offset);
+        maxColorUpdate =
+          maxColorUpdate === null
+            ? offset + 2
+            : Math.max(maxColorUpdate, offset + 2);
+      }
+    }
     if (mesh) {
       mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.computeBoundingSphere) {
+        mesh.computeBoundingSphere();
+      }
     }
     if (positionAttr) {
       positionAttr.needsUpdate = true;
@@ -223,6 +329,14 @@ const ChaosManager = ({
       indexAttr.updateRange.offset = minIndexUpdate;
       indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate + 1;
       indexAttr.needsUpdate = true;
+    }
+    if (colorAttr && minColorUpdate !== null) {
+      if (!colorAttr.updateRange) {
+        colorAttr.updateRange = { offset: 0, count: -1 };
+      }
+      colorAttr.updateRange.offset = minColorUpdate;
+      colorAttr.updateRange.count = maxColorUpdate - minColorUpdate + 1;
+      colorAttr.needsUpdate = true;
     }
   });
 
@@ -261,7 +375,7 @@ const ChaosManager = ({
           blending={THREE.AdditiveBlending}
         />
       </instancedMesh>
-      <lineSegments geometry={trailsGeometryRef.current}>
+      <lineSegments geometry={trailsGeometryRef.current} frustumCulled={false}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
       {initialPositions.map((pos, idx) => (

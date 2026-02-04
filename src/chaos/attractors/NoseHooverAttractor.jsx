@@ -20,7 +20,16 @@ const NoseHooverAttractor = ({ sharedParams }) => {
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
-  const { dt, substeps, Npoints, trailLength, lowSpeedHex, highSpeedHex, globalScale } =
+  const {
+    dt,
+    substeps,
+    Npoints,
+    trailLength,
+    lowSpeedHex,
+    highSpeedHex,
+    globalScale,
+    speedContrast,
+  } =
     sharedParams;
 
   const lowSpeedColor = useMemo(
@@ -46,6 +55,7 @@ const NoseHooverAttractor = ({ sharedParams }) => {
         equation={equation}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
+        speedContrast={speedContrast}
         freeze={freeze}
         restartTrigger={restartTrigger}
       />

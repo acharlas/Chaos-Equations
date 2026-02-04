@@ -19,6 +19,7 @@ const ParticleState = forwardRef(({
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
   const wRef = useRef(0);
+  const speedRef = useRef(0);
   const writeIndexRef = useRef(0);
   const dtRef = useRef(dt);
   const equationRef = useRef(equation);
@@ -101,18 +102,22 @@ const ParticleState = forwardRef(({
     }
   }, [restartTrigger, initialPosition, trailLength]);
 
-  const step = useCallback((writeTrail = true) => {
+  const step = useCallback((writeTrail = true, dtOverride) => {
     if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
     const pos = positionRef.current;
+    const dtLocal =
+      typeof dtOverride === "number" ? dtOverride : dtRef.current;
     const [dx, dy, dz, dw] = equationRef.current(
       pos.x,
       pos.y,
       pos.z,
-      dtRef.current,
+      dtLocal,
       wRef.current
     );
+    speedRef.current =
+      dtLocal !== 0 ? Math.hypot(dx, dy, dz) / dtLocal : 0;
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
@@ -145,6 +150,7 @@ const ParticleState = forwardRef(({
       step,
       getPosition: () => positionRef.current,
       getWriteIndex: () => writeIndexRef.current,
+      getSpeed: () => speedRef.current,
     }),
     [step]
   );

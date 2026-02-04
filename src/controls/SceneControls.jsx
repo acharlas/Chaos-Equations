@@ -16,6 +16,13 @@ export const getSceneControls = () => ({
   },
   lowSpeedHex: { value: "#0000ff" },
   highSpeedHex: { value: "#00ff00" },
+  speedContrast: {
+    value: 0.5,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    label: "Speed Contrast",
+  },
   globalScale: { value: 6, min: 1, max: 15, step: 0.1, label: "Scale" },
   integration: folder(
     {

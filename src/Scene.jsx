@@ -21,6 +21,7 @@ const Scene = () => {
     trailLength,
     lowSpeedHex,
     highSpeedHex,
+    speedContrast,
     globalScale,
     dt,
     substeps,
@@ -41,6 +42,7 @@ const Scene = () => {
     trailLength,
     lowSpeedHex,
     highSpeedHex,
+    speedContrast,
     globalScale,
   };
 
