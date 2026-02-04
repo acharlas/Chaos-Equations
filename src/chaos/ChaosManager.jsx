@@ -89,7 +89,8 @@ const ChaosManager = ({
     trailsGeometryRef.current.setAttribute("color", colorAttr);
     trailColorAttrRef.current = colorAttr;
 
-    const segmentCount = Math.max(renderTrailLength - 1, 0) * Npoints;
+    const segmentCount =
+      renderTrailLength > 1 ? renderTrailLength * Npoints : 0;
     if (segmentCount > 0) {
       const IndexArrayType =
         totalPoints <= 65535 ? Uint16Array : Uint32Array;
@@ -97,9 +98,11 @@ const ChaosManager = ({
       let index = 0;
       for (let p = 0; p < Npoints; p++) {
         const base = p * renderTrailLength;
-        for (let i = 0; i < renderTrailLength - 1; i++) {
-          indexArray[index++] = base + i;
-          indexArray[index++] = base + i + 1;
+        for (let i = 0; i < renderTrailLength; i++) {
+          const a = base + i;
+          const b = base + ((i + 1) % renderTrailLength);
+          indexArray[index++] = a;
+          indexArray[index++] = b;
         }
       }
       const indexAttr = new THREE.BufferAttribute(indexArray, 1);
@@ -204,16 +207,20 @@ const ChaosManager = ({
       }
       if (indexAttr && renderTrailLength > 1 && particle?.getWriteIndex) {
         const writeIndex = particle.getWriteIndex();
-        const nextBreak = writeIndex === 0 ? -1 : writeIndex - 1;
+        const nextBreak =
+          renderTrailLength > 1
+            ? (writeIndex - 1 + renderTrailLength) % renderTrailLength
+            : -1;
         const prevBreak = breakSegments[i] ?? -1;
         if (prevBreak !== nextBreak) {
           const baseVertex = i * renderTrailLength;
-          const baseSegmentOffset = i * (renderTrailLength - 1) * 2;
+          const baseSegmentOffset = i * renderTrailLength * 2;
           const indexArray = indexAttr.array;
           if (prevBreak >= 0) {
             const restoreOffset = baseSegmentOffset + prevBreak * 2;
             indexArray[restoreOffset] = baseVertex + prevBreak;
-            indexArray[restoreOffset + 1] = baseVertex + prevBreak + 1;
+            indexArray[restoreOffset + 1] =
+              baseVertex + ((prevBreak + 1) % renderTrailLength);
             minIndexUpdate =
               minIndexUpdate === null
                 ? restoreOffset
@@ -243,6 +250,9 @@ const ChaosManager = ({
     }
     if (mesh) {
       mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.computeBoundingSphere) {
+        mesh.computeBoundingSphere();
+      }
     }
     if (positionAttr) {
       positionAttr.needsUpdate = true;
@@ -300,7 +310,7 @@ const ChaosManager = ({
           blending={THREE.AdditiveBlending}
         />
       </instancedMesh>
-      <lineSegments geometry={trailsGeometryRef.current}>
+      <lineSegments geometry={trailsGeometryRef.current} frustumCulled={false}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
       {initialPositions.map((pos, idx) => (
