@@ -12,9 +12,9 @@ const LorenzAttractor = ({ sharedParams }) => {
   const { a, b, c } = useControls({
     Lorenz: folder(
       {
-        a: { value: 10, min: 5, max: 15, step: 0.5 },
-        b: { value: 28, min: 20, max: 40, step: 1 },
-        c: { value: 2.7, min: 2, max: 5, step: 0.1 },
+        a: { value: 10, min: 5, max: 20, step: 0.5 },
+        b: { value: 28, min: 15, max: 45, step: 1 },
+        c: { value: 2.67, min: 1, max: 5, step: 0.01 },
       },
       { order: -1 }
     ),

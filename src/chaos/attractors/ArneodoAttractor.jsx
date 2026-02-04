@@ -12,9 +12,9 @@ const ArneodoAttractor = ({ sharedParams }) => {
   const { a, b, c } = useControls({
     Arneodo: folder(
       {
-        a: { value: 5.5, min: 0, max: 10, step: 0.1 },
-        b: { value: 3.5, min: 0, max: 10, step: 0.1 },
-        c: { value: 1, min: 0, max: 5, step: 0.1 },
+        a: { value: 5.5, min: 0, max: 7, step: 0.1 },
+        b: { value: 3.5, min: 0, max: 7, step: 0.1 },
+        c: { value: 1, min: 0, max: 3, step: 0.1 },
       },
       { order: -1 }
     ),

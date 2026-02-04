@@ -12,8 +12,8 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   const { alpha, gamma } = useControls({
     RabinovichFabrikant: folder(
       {
-        alpha: { value: 0.14, min: 0.01, max: 1, step: 0.01 },
-        gamma: { value: 0.10, min: 0, max: 1, step: 0.01 },
+        alpha: { value: 0.14, min: 0.05, max: 0.4, step: 0.01 },
+        gamma: { value: 0.10, min: 0, max: 0.2, step: 0.01 },
       },
       { order: -1 }
     ),

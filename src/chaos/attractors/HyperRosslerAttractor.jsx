@@ -12,11 +12,11 @@ const HyperRosslerAttractor = ({ sharedParams }) => {
   const { a, b, c, d, e } = useControls({
     HyperRossler: folder(
       {
-        a: { value: 0.25, min: 0, max: 1, step: 0.01 },
-        b: { value: 3, min: 0, max: 5, step: 0.1 },
-        c: { value: 0.5, min: 0, max: 2, step: 0.01 },
-        d: { value: 0.05, min: -1, max: 1, step: 0.01 },
-        e: { value: 0.1, min: -1, max: 1, step: 0.01 },
+        a: { value: 0.25, min: 0, max: 0.6, step: 0.01 },
+        b: { value: 3, min: 1, max: 4, step: 0.1 },
+        c: { value: 0.5, min: 0, max: 1.2, step: 0.01 },
+        d: { value: 0.05, min: -0.2, max: 0.2, step: 0.01 },
+        e: { value: 0.1, min: -0.2, max: 0.2, step: 0.01 },
       },
       { order: -1 }
     ),

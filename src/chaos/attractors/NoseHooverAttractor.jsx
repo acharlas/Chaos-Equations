@@ -12,7 +12,7 @@ const NoseHooverAttractor = ({ sharedParams }) => {
   const { a } = useControls({
     NoseHoover: folder(
       {
-        a: { value: 1.5, min: 0, max: 5, step: 0.01 },
+        a: { value: 1.5, min: 0.5, max: 3, step: 0.01 },
       },
       { order: -1 }
     ),

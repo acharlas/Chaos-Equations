@@ -12,11 +12,11 @@ const DadrasAttractor = ({ sharedParams }) => {
   const { a, b, c, d, e } = useControls({
     Dadras: folder(
       {
-        a: { value: 3, min: 0, max: 6, step: 0.1 },
-        b: { value: 2.7, min: 0, max: 5, step: 0.1 },
-        c: { value: 1.7, min: 0, max: 5, step: 0.1 },
-        d: { value: 2, min: 0, max: 5, step: 0.1 },
-        e: { value: 9, min: 0, max: 15, step: 0.1 },
+        a: { value: 3, min: 1, max: 5, step: 0.1 },
+        b: { value: 2.7, min: 1, max: 4, step: 0.1 },
+        c: { value: 1.7, min: 1, max: 3, step: 0.1 },
+        d: { value: 2, min: 1, max: 3, step: 0.1 },
+        e: { value: 9, min: 5, max: 12, step: 0.1 },
       },
       { order: -1 }
     ),

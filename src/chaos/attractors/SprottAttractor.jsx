@@ -12,7 +12,7 @@ const SprottAttractor = ({ sharedParams }) => {
   const { a } = useControls({
     Sprott: folder(
       {
-        a: { value: 1, min: -2, max: 2, step: 0.01 },
+        a: { value: 1, min: -1.5, max: 1.5, step: 0.01 },
       },
       { order: -1 }
     ),

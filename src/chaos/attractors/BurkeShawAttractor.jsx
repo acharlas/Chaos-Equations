@@ -12,8 +12,8 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   const { a, b } = useControls({
     BurkeShaw: folder(
       {
-        a: { value: 10, min: 0, max: 20, step: 0.1 },
-        b: { value: 13, min: 0, max: 20, step: 0.1 },
+        a: { value: 10, min: 5, max: 18, step: 0.1 },
+        b: { value: 13, min: 5, max: 18, step: 0.1 },
       },
       { order: -1 }
     ),

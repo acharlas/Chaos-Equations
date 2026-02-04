@@ -12,10 +12,10 @@ const ChuaAttractor = ({ sharedParams }) => {
   const { a, b, m0, m1 } = useControls({
     Chua: folder(
       {
-        a: { value: 15.6, min: 5, max: 25, step: 0.1 },
-        b: { value: 28, min: 10, max: 40, step: 0.5 },
-        m0: { value: -1.143, min: -2, max: 0, step: 0.001 },
-        m1: { value: -0.714, min: -2, max: 0, step: 0.001 },
+        a: { value: 15.6, min: 10, max: 20, step: 0.1 },
+        b: { value: 28, min: 20, max: 35, step: 0.5 },
+        m0: { value: -1.143, min: -1.6, max: -0.6, step: 0.001 },
+        m1: { value: -0.714, min: -1.2, max: -0.4, step: 0.001 },
       },
       { order: -1 }
     ),

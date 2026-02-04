@@ -28,6 +28,7 @@ const Scene = () => {
     showStats,
     showStars,
     maxDpr,
+    maxTrailPoints,
 
     bloom,
     bloom_threshold,
@@ -44,6 +45,7 @@ const Scene = () => {
     highSpeedHex,
     speedContrast,
     globalScale,
+    maxTrailPoints,
   };
 
   return (

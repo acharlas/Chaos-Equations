@@ -12,7 +12,7 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   const { a } = useControls({
     Halvorsen: folder(
       {
-        a: { value: 1.5, min: 1.0, max: 5, step: 0.05 },
+        a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 },
       },
       { order: -1 }
     ),

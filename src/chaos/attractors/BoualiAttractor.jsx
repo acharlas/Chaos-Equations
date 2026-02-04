@@ -12,9 +12,9 @@ const BoualiAttractor = ({ sharedParams }) => {
   const { a, b, c } = useControls({
     Bouali: folder(
       {
-        a: { value: 0.3, min: 0, max: 1, step: 0.01 },
-        b: { value: 1, min: 0, max: 3, step: 0.01 },
-        c: { value: 1, min: 0, max: 3, step: 0.01 },
+        a: { value: 0.3, min: 0, max: 0.8, step: 0.01 },
+        b: { value: 1, min: 0, max: 2, step: 0.01 },
+        c: { value: 1, min: 0, max: 2, step: 0.01 },
       },
       { order: -1 }
     ),

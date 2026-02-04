@@ -12,7 +12,7 @@ const ThomasAttractor = ({ sharedParams }) => {
   const { b } = useControls({
     Thomas: folder(
       {
-        b: { value: 0.19, min: 0, max: 0.3, step: 0.01 },
+        b: { value: 0.19, min: 0.12, max: 0.3, step: 0.01 },
       },
       { order: -1 }
     ),

@@ -7,6 +7,8 @@ import ParticleState from "./ParticleState";
 const AUTO_SPEED_LOW_PERCENTILE = 10;
 const AUTO_SPEED_HIGH_PERCENTILE = 90;
 const AUTO_SPEED_SMOOTHING = 0.15;
+const DEFAULT_MAX_TRAIL_POINTS = 300000; // Performance budget: Npoints * trailLength.
+const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
 
 const ChaosManager = ({
   Npoints,
@@ -17,6 +19,7 @@ const ChaosManager = ({
   lowSpeedColor,
   highSpeedColor,
   speedContrast = 0.5,
+  maxTrailPoints = DEFAULT_MAX_TRAIL_POINTS,
   freeze,
   restartTrigger,
 }) => {
@@ -46,11 +49,21 @@ const ChaosManager = ({
     );
   }, [gl]);
 
+  const budgetCap = useMemo(() => {
+    const maxByBudget = Math.floor(maxTrailPoints / Math.max(1, Npoints));
+    return Math.max(1, maxByBudget);
+  }, [maxTrailPoints, Npoints]);
+
+  const budgetTrailLength = useMemo(
+    () => Math.min(trailLength, budgetCap),
+    [trailLength, budgetCap]
+  );
+
   const renderTrailLength = useMemo(() => {
-    if (supportsUint32Indices) return trailLength;
+    if (supportsUint32Indices) return budgetTrailLength;
     const maxTrail = Math.floor(65535 / Math.max(Npoints, 1));
-    return Math.max(1, Math.min(trailLength, maxTrail));
-  }, [supportsUint32Indices, trailLength, Npoints]);
+    return Math.max(1, Math.min(budgetTrailLength, maxTrail));
+  }, [supportsUint32Indices, budgetTrailLength, Npoints]);
 
   const initialPositions = useMemo(() => {
     const positions = [];
@@ -422,6 +435,22 @@ const ChaosManager = ({
     }
   });
 
+  const clampReasons = [];
+  if (budgetCap < trailLength) {
+    clampReasons.push("performance budget");
+  }
+  if (!supportsUint32Indices && renderTrailLength < budgetTrailLength) {
+    clampReasons.push("WebGL index limit");
+  }
+  const clampReasonText =
+    clampReasons.length > 0 ? ` (${clampReasons.join(", ")})` : "";
+  const requestedPoints = trailLength * Math.max(1, Npoints);
+  const formatNumber = (value) => NUMBER_FORMATTER.format(value);
+  const budgetInfo =
+    budgetCap < trailLength
+      ? `, budget cap ${formatNumber(budgetCap)} (requested ${formatNumber(requestedPoints)})`
+      : "";
+
   return (
     <>
       {renderTrailLength !== trailLength && (
@@ -440,7 +469,8 @@ const ChaosManager = ({
               pointerEvents: "none",
             }}
           >
-            Trail length clamped to {renderTrailLength} (requested {trailLength})
+            Trail length clamped to {renderTrailLength} (requested {trailLength}
+            {budgetInfo}){clampReasonText}
           </div>
         </Html>
       )}

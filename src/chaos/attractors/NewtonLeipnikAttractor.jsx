@@ -12,8 +12,8 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
   const { a, b } = useControls({
     NewtonLeipnik: folder(
       {
-        a: { value: 0.4, min: 0, max: 2, step: 0.01 },
-        b: { value: 0.175, min: 0, max: 1, step: 0.001 },
+        a: { value: 0.4, min: 0, max: 1, step: 0.01 },
+        b: { value: 0.175, min: 0, max: 0.5, step: 0.001 },
       },
       { order: -1 }
     ),
