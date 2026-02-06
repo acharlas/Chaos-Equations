@@ -499,7 +499,7 @@ const ChaosManager = ({
   return (
     <>
       {renderTrailLength !== trailLength && (
-        <Html fullscreen>
+        <Html fullscreen style={{ pointerEvents: "none" }}>
           <div
             style={{
               position: "absolute",
@@ -511,7 +511,6 @@ const ChaosManager = ({
               fontFamily: "monospace",
               fontSize: 12,
               borderRadius: 6,
-              pointerEvents: "none",
             }}
           >
             Trail length clamped to {renderTrailLength} (requested {trailLength}
