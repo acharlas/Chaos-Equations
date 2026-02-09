@@ -12,7 +12,8 @@ const ParticleState = forwardRef(({
   dt,
   trailLength,
   trailTarget,
-  trailOffset = 0,
+  particleIndex = 0,
+  totalParticles = 1,
   equation,
   freeze = false,
   restartTrigger,
@@ -20,13 +21,13 @@ const ParticleState = forwardRef(({
   const positionRef = useRef(new THREE.Vector3());
   const wRef = useRef(0);
   const speedRef = useRef(0);
-  const writeIndexRef = useRef(0);
   const dtRef = useRef(dt);
   const equationRef = useRef(equation);
   const freezeRef = useRef(freeze);
   const trailLengthRef = useRef(trailLength);
   const trailTargetRef = useRef(trailTarget);
-  const trailOffsetRef = useRef(trailOffset);
+  const particleIndexRef = useRef(particleIndex);
+  const totalParticlesRef = useRef(totalParticles);
 
   useEffect(() => {
     dtRef.current = dt;
@@ -49,30 +50,29 @@ const ParticleState = forwardRef(({
   }, [trailTarget]);
 
   useEffect(() => {
-    trailOffsetRef.current = trailOffset;
-  }, [trailOffset]);
+    particleIndexRef.current = particleIndex;
+  }, [particleIndex]);
 
-  // (Re)initialize buffer when the trail length changes.
+  useEffect(() => {
+    totalParticlesRef.current = totalParticles;
+  }, [totalParticles]);
+
+  // (Re)initialize buffer when the trail layout changes.
   useEffect(() => {
     const pos = positionRef.current;
-    if (trailLength > 0) {
-      writeIndexRef.current = trailLength > 1 ? 1 : 0;
-    } else {
-      writeIndexRef.current = 0;
-    }
-
     const targetRef = trailTargetRef.current;
     const target = targetRef?.current ?? targetRef;
-    const offset = trailOffsetRef.current;
-    if (target && trailLength > 0) {
-      const size = trailLength * 3;
-      for (let i = 0; i < size; i += 3) {
-        target[offset + i] = pos.x;
-        target[offset + i + 1] = pos.y;
-        target[offset + i + 2] = pos.z;
+    const particle = particleIndexRef.current;
+    const total = totalParticlesRef.current;
+    if (target && trailLength > 0 && total > 0) {
+      for (let i = 0; i < trailLength; i++) {
+        const base = (i * total + particle) * 3;
+        target[base] = pos.x;
+        target[base + 1] = pos.y;
+        target[base + 2] = pos.z;
       }
     }
-  }, [trailLength]);
+  }, [trailLength, particleIndex, totalParticles]);
 
   // On restart, reset the particle's position and trail.
   useEffect(() => {
@@ -83,26 +83,21 @@ const ParticleState = forwardRef(({
     );
     wRef.current = 0;
 
-    if (trailLength > 0) {
-      writeIndexRef.current = trailLength > 1 ? 1 : 0;
-    } else {
-      writeIndexRef.current = 0;
-    }
-
     const targetRef = trailTargetRef.current;
     const target = targetRef?.current ?? targetRef;
-    const offset = trailOffsetRef.current;
-    if (target && trailLength > 0) {
-      const size = trailLength * 3;
-      for (let i = 0; i < size; i += 3) {
-        target[offset + i] = initialPosition[0];
-        target[offset + i + 1] = initialPosition[1];
-        target[offset + i + 2] = initialPosition[2];
+    const particle = particleIndexRef.current;
+    const total = totalParticlesRef.current;
+    if (target && trailLength > 0 && total > 0) {
+      for (let i = 0; i < trailLength; i++) {
+        const base = (i * total + particle) * 3;
+        target[base] = initialPosition[0];
+        target[base + 1] = initialPosition[1];
+        target[base + 2] = initialPosition[2];
       }
     }
-  }, [restartTrigger, initialPosition, trailLength]);
+  }, [restartTrigger, initialPosition, trailLength, particleIndex, totalParticles]);
 
-  const step = useCallback((writeTrail = true, dtOverride) => {
+  const step = useCallback((writeIndex, writeTrail = true, dtOverride) => {
     if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
@@ -128,14 +123,12 @@ const ParticleState = forwardRef(({
     }
 
     if (writeTrail) {
-      const writeIndex = writeIndexRef.current;
-      const writeOffset = writeIndex * 3;
-      writeIndexRef.current = (writeIndex + 1) % currentTrailLength;
-
       const targetRef = trailTargetRef.current;
       const target = targetRef?.current ?? targetRef;
-      if (target) {
-        const baseOffset = trailOffsetRef.current + writeOffset;
+      const particle = particleIndexRef.current;
+      const total = totalParticlesRef.current;
+      if (target && total > 0 && typeof writeIndex === "number") {
+        const baseOffset = (writeIndex * total + particle) * 3;
         target[baseOffset] = newX;
         target[baseOffset + 1] = newY;
         target[baseOffset + 2] = newZ;
@@ -150,7 +143,6 @@ const ParticleState = forwardRef(({
     () => ({
       step,
       getPosition: () => positionRef.current,
-      getWriteIndex: () => writeIndexRef.current,
       getSpeed: () => speedRef.current,
     }),
     [step]

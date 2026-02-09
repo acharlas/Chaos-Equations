@@ -61,8 +61,8 @@ const ChaosManager = ({
   const trailColorAttrRef = useRef(null);
   const trailIndexAttrRef = useRef(null);
   const breakSegmentsRef = useRef([]);
+  const globalWriteIndexRef = useRef(0);
   const speedSamplesRef = useRef(new Float32Array(0));
-  const writeIndexSamplesRef = useRef(new Int32Array(0));
   const speedListRef = useRef([]);
   const frameCountRef = useRef(0);
   const autoSpeedMinRef = useRef(0);
@@ -108,7 +108,6 @@ const ChaosManager = ({
     particleRefs.current = particleRefs.current.slice(0, Npoints);
     breakSegmentsRef.current = new Array(Npoints).fill(-1);
     speedSamplesRef.current = new Float32Array(Npoints);
-    writeIndexSamplesRef.current = new Int32Array(Npoints).fill(-1);
     autoRangeInitializedRef.current = false;
   }, [Npoints]);
 
@@ -118,6 +117,11 @@ const ChaosManager = ({
       speeds.fill(0);
     }
   }, [restartTrigger, renderTrailLength, Npoints]);
+
+  useEffect(() => {
+    globalWriteIndexRef.current = renderTrailLength > 1 ? 1 : 0;
+    // reset global write index when trail length changes or restarts
+  }, [renderTrailLength, restartTrigger, Npoints]);
 
   useEffect(() => {
     autoRangeInitializedRef.current = false;
@@ -163,10 +167,9 @@ const ChaosManager = ({
       const indexArray = new IndexArrayType(segmentCount * 2);
       let index = 0;
       for (let p = 0; p < Npoints; p++) {
-        const base = p * renderTrailLength;
         for (let i = 0; i < renderTrailLength; i++) {
-          const a = base + i;
-          const b = base + ((i + 1) % renderTrailLength);
+          const a = i * Npoints + p;
+          const b = ((i + 1) % renderTrailLength) * Npoints + p;
           indexArray[index++] = a;
           indexArray[index++] = b;
         }
@@ -265,7 +268,6 @@ const ChaosManager = ({
     const dtStep = dt / steps;
     const breakSegments = breakSegmentsRef.current;
     const speedSamples = speedSamplesRef.current;
-    const writeIndexSamples = writeIndexSamplesRef.current;
     const speedList = speedListRef.current;
     const shouldUpdateRange =
       frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
@@ -278,6 +280,12 @@ const ChaosManager = ({
     const dr = highCol.r - lowCol.r;
     const dg = highCol.g - lowCol.g;
     const db = highCol.b - lowCol.b;
+    const currentWriteIndex =
+      renderTrailLength > 0 ? globalWriteIndexRef.current : -1;
+    const nextWriteIndex =
+      renderTrailLength > 0
+        ? (currentWriteIndex + 1) % renderTrailLength
+        : -1;
     let minIndexUpdate = null;
     let maxIndexUpdate = null;
     speedList.length = 0;
@@ -286,7 +294,11 @@ const ChaosManager = ({
       let position = null;
       if (particle?.step) {
         for (let s = 0; s < steps; s++) {
-          position = particle.step(s === steps - 1, dtStep);
+          position = particle.step(
+            currentWriteIndex,
+            s === steps - 1,
+            dtStep
+          );
         }
       }
       if (mesh && position) {
@@ -294,8 +306,6 @@ const ChaosManager = ({
         tempMatrix.current.setPosition(position);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      const writeIndex = particle?.getWriteIndex ? particle.getWriteIndex() : -1;
-      writeIndexSamples[i] = writeIndex ?? -1;
       let speed = 0;
       let rawSpeed = 0;
       if (particle?.getSpeed) {
@@ -305,28 +315,26 @@ const ChaosManager = ({
       speedSamples[i] = speed;
       if (
         shouldUpdateRange &&
-        writeIndex !== null &&
-        writeIndex >= 0 &&
+        nextWriteIndex >= 0 &&
         Number.isFinite(rawSpeed) &&
         i % sampleStride === 0
       ) {
         speedList.push(rawSpeed);
       }
-      if (indexAttr && renderTrailLength > 1 && writeIndex !== null && writeIndex >= 0) {
+      if (indexAttr && renderTrailLength > 1 && nextWriteIndex >= 0) {
         const nextBreak =
           renderTrailLength > 1
-            ? (writeIndex - 1 + renderTrailLength) % renderTrailLength
+            ? (nextWriteIndex - 1 + renderTrailLength) % renderTrailLength
             : -1;
         const prevBreak = breakSegments[i] ?? -1;
         if (prevBreak !== nextBreak) {
-          const baseVertex = i * renderTrailLength;
           const baseSegmentOffset = i * renderTrailLength * 2;
           const indexArray = indexAttr.array;
           if (prevBreak >= 0) {
             const restoreOffset = baseSegmentOffset + prevBreak * 2;
-            indexArray[restoreOffset] = baseVertex + prevBreak;
+            indexArray[restoreOffset] = prevBreak * Npoints + i;
             indexArray[restoreOffset + 1] =
-              baseVertex + ((prevBreak + 1) % renderTrailLength);
+              ((prevBreak + 1) % renderTrailLength) * Npoints + i;
             minIndexUpdate =
               minIndexUpdate === null
                 ? restoreOffset
@@ -338,7 +346,7 @@ const ChaosManager = ({
           }
           if (nextBreak >= 0) {
             const breakOffset = baseSegmentOffset + nextBreak * 2;
-            const v = baseVertex + nextBreak;
+            const v = nextBreak * Npoints + i;
             indexArray[breakOffset] = v;
             indexArray[breakOffset + 1] = v;
             minIndexUpdate =
@@ -353,6 +361,9 @@ const ChaosManager = ({
           breakSegments[i] = nextBreak;
         }
       }
+    }
+    if (nextWriteIndex >= 0) {
+      globalWriteIndexRef.current = nextWriteIndex;
     }
     let rangeMin = autoRangeInitializedRef.current
       ? autoSpeedMinRef.current
@@ -395,34 +406,45 @@ const ChaosManager = ({
     );
     let minColorUpdate = null;
     let maxColorUpdate = null;
-    if (colorAttr && colors.length > 0 && renderTrailLength > 0) {
+    let minPositionUpdate = null;
+    let maxPositionUpdate = null;
+    if (renderTrailLength > 0) {
       for (let i = 0; i < refs.length; i++) {
-        const writeIndex = writeIndexSamples[i];
-        if (writeIndex < 0) continue;
+        if (nextWriteIndex < 0) continue;
         const lastIndex =
-          writeIndex === 0 ? renderTrailLength - 1 : writeIndex - 1;
-        const pointIndex = i * renderTrailLength + lastIndex;
+          nextWriteIndex === 0 ? renderTrailLength - 1 : nextWriteIndex - 1;
+        const pointIndex = lastIndex * Npoints + i;
         const offset = pointIndex * 3;
         const speed = speedSamples[i];
         if (pointIndex < trailSpeeds.length) {
           trailSpeeds[pointIndex] = speed;
         }
-        const tRaw = Math.min(
-          1,
-          Math.max(0, (speed - rangeMin) / speedRange)
-        );
-        const t = gamma === 1 ? tRaw : Math.pow(tRaw, gamma);
-        colors[offset] = lowCol.r + dr * t;
-        colors[offset + 1] = lowCol.g + dg * t;
-        colors[offset + 2] = lowCol.b + db * t;
-        minColorUpdate =
-          minColorUpdate === null
+        if (colorAttr && colors.length > 0) {
+          const tRaw = Math.min(
+            1,
+            Math.max(0, (speed - rangeMin) / speedRange)
+          );
+          const t = gamma === 1 ? tRaw : Math.pow(tRaw, gamma);
+          colors[offset] = lowCol.r + dr * t;
+          colors[offset + 1] = lowCol.g + dg * t;
+          colors[offset + 2] = lowCol.b + db * t;
+          minColorUpdate =
+            minColorUpdate === null
+              ? offset
+              : Math.min(minColorUpdate, offset);
+          maxColorUpdate =
+            maxColorUpdate === null
+              ? offset + 2
+              : Math.max(maxColorUpdate, offset + 2);
+        }
+        minPositionUpdate =
+          minPositionUpdate === null
             ? offset
-            : Math.min(minColorUpdate, offset);
-        maxColorUpdate =
-          maxColorUpdate === null
+            : Math.min(minPositionUpdate, offset);
+        maxPositionUpdate =
+          maxPositionUpdate === null
             ? offset + 2
-            : Math.max(maxColorUpdate, offset + 2);
+            : Math.max(maxPositionUpdate, offset + 2);
       }
     }
     if (mesh) {
@@ -431,7 +453,13 @@ const ChaosManager = ({
         mesh.computeBoundingSphere();
       }
     }
-    if (positionAttr) {
+    if (positionAttr && minPositionUpdate !== null) {
+      if (!positionAttr.updateRange) {
+        positionAttr.updateRange = { offset: 0, count: -1 };
+      }
+      positionAttr.updateRange.offset = minPositionUpdate;
+      positionAttr.updateRange.count =
+        maxPositionUpdate - minPositionUpdate + 1;
       positionAttr.needsUpdate = true;
     }
     if (indexAttr && minIndexUpdate !== null) {
@@ -471,7 +499,7 @@ const ChaosManager = ({
   return (
     <>
       {renderTrailLength !== trailLength && (
-        <Html fullscreen>
+        <Html fullscreen style={{ pointerEvents: "none" }}>
           <div
             style={{
               position: "absolute",
@@ -483,7 +511,6 @@ const ChaosManager = ({
               fontFamily: "monospace",
               fontSize: 12,
               borderRadius: 6,
-              pointerEvents: "none",
             }}
           >
             Trail length clamped to {renderTrailLength} (requested {trailLength}
@@ -516,8 +543,9 @@ const ChaosManager = ({
           initialPosition={pos}
           dt={dt}
           trailTarget={trailPositionsRef}
-          trailOffset={idx * renderTrailLength * 3}
           trailLength={renderTrailLength}
+          particleIndex={idx}
+          totalParticles={Npoints}
           equation={equation}
           freeze={freeze}
           restartTrigger={restartTrigger}
