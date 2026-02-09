@@ -13,24 +13,29 @@ A modern simulation engine for chaotic attractors in your browser. Chaos‐Equat
   Each attractor is implemented as a separate module. Shared components like `ChaosManager`, `Particle`, and `AttractorWrapper` help reduce code duplication and improve maintainability.
 
 - **Dynamic Simulation Controls:**  
-  Leva controls allow you to adjust simulation parameters (e.g., time step, number of particles, trail length, global scaling) in real-time. Two dedicated Leva buttons let you freeze the simulation and restart it from the beginning.
-
-- **Dynamic Simulation Controls::**  
-  Real‑time parameter adjustments via Leva controls allow you to tweak time steps, particle count, trail length, scaling, and more.
+  Leva controls allow you to adjust simulation parameters (e.g., time step, number of particles, trail length, global scaling) in real-time. Dedicated controls let you freeze the simulation and restart it from the beginning.
 
 - **Updated Camera Setup:**  
-  The default camera parameters have been updated to use the logged values for position, field of view, near, and far, ensuring an optimal initial view of the simulation.
+  Tuned default camera settings for a consistent initial view.
 
 - **Postprocessing Effects:**  
   Includes postprocessing effects (such as UnrealBloomPass) to produce a glowing, vibrant visualization of attractor tips.
 
+## Controls
+
+- `Attractor`: pick the active system from the dropdown.
+- `Simulation`: `Particles`, `Trail Length`, `Global Scale`, `Time Step`, `Substeps`.
+- `Colors`: `Low Speed Color`, `High Speed Color`, `Speed Color Boost`.
+- `Performance`: `Render Resolution`, `Trail Budget (particles × trail length)`.
+- `Effects`: toggle `Bloom` and tune `Threshold`, `Strength`, `Radius`.
+- `View`: `Show Stats`, `Show Stars`.
+- Actions: `freeze` / `restart` buttons appear inside each attractor's control folder, plus `Reset Camera`.
+
 ## Screenshots
 
-<p align="center">
-  <img src="./screenshots/Thomas-chaos.png" alt="thomas chaos" width="30%" style="margin: 10px;"/>
-  <img src="./screenshots/default.png" alt="default" width="30%" style="margin: 10px;"/>
-  <img src="./screenshots/Lorenz-chaos.png" alt="Lorenz chaos" width="30%" style="margin: 10px;"/>
-</p>
+| Thomas | Default | Lorenz |
+| --- | --- | --- |
+| ![thomas chaos](./screenshots/Thomas-chaos.png) | ![default](./screenshots/default.png) | ![Lorenz chaos](./screenshots/Lorenz-chaos.png) |
 
 ## Installation
 
@@ -41,21 +46,37 @@ A modern simulation engine for chaotic attractors in your browser. Chaos‐Equat
    cd Chaos-Equations
    ```
 
-2. **Build and run with Docker Compose:**
+2. **Install and run locally (recommended):**
+
+   ```sh
+   npm install
+   npm run dev
+   ```
+
+   Open your browser and navigate to http://localhost:3000 to see the simulation.
+
+3. **Or build and run with Docker Compose:**
 
    ```sh
    docker-compose up --build
    ```
 
-Open your browser and navigate to http://localhost:3000 to see the simulation.
+   Open your browser and navigate to http://localhost:3000 to see the simulation.
+
+4. **Optional sanity checks:**
+
+   ```sh
+   npm run lint
+   npm run build
+   ```
 
 ## Project Overview
 
 - **AttractorManager:**  
-  Provides a UI control (via Leva) to switch between the Halvorsen and Lorenz attractors.
+  Provides a UI control (via Leva) to switch between multiple attractors.
 
-- **HalvorsenAttractor / LorenzAttractor:**  
-  Each attractor sets up its own parameters (merged with shared controls), binds its specific chaotic equation, and passes the configuration to the ChaosManager.
+- **Attractor components:**  
+  Each attractor component sets up its own parameters (merged with shared controls), binds its specific chaotic equation, and passes the configuration to the ChaosManager.
 
 - **ChaosManager & Particle:**  
   The ChaosManager spawns multiple particles, each updating its position according to the provided chaotic equation. Each particle renders a trail with a smooth gradient and a glowing tip (a customizable sphere) whose size can be adjusted.
@@ -70,5 +91,3 @@ Feel free to explore and tweak the controls in the Leva panel to see how differe
 [React-url]: https://react.dev/
 [Three.js]: https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white
 [Three-url]: https://threejs.org/
-
-
