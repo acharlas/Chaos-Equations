@@ -33,7 +33,7 @@ A modern simulation engine for chaotic attractors in your browser. Chaos‐Equat
 
 ## Screenshots
 
-| Thomas | Default | Lorenz |
+| Thomas | Halvorsen | Lorenz |
 | --- | --- | --- |
 | ![thomas chaos](./screenshots/Thomas-chaos.png) | ![default](./screenshots/default.png) | ![Lorenz chaos](./screenshots/Lorenz-chaos.png) |
 
@@ -91,3 +91,7 @@ Feel free to explore and tweak the controls in the Leva panel to see how differe
 [React-url]: https://react.dev/
 [Three.js]: https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white
 [Three-url]: https://threejs.org/
+
+## License
+
+MIT © 2026 Axel Charlassier. See `LICENSE`.
