@@ -10,7 +10,7 @@ yarn-debug.log*
 pnpm-debug.log*
 
 .codex/
-.agents/skills/writing-linkedin-posts/
+.agents/
 
 screenshots/embed.png
 .DS_Store
