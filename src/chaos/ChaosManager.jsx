@@ -1,9 +1,9 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import ParticleState from "./ParticleState";
 
+const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
 const AUTO_SPEED_LOW_PERCENTILE = 10;
 const AUTO_SPEED_HIGH_PERCENTILE = 90;
 const AUTO_SPEED_SMOOTHING = 0.15;
@@ -11,8 +11,6 @@ const AUTO_SPEED_SMOOTHING = 0.15;
 const SPEED_RANGE_UPDATE_INTERVAL = 10;
 const MAX_SPEED_SAMPLES = 2000;
 const DEFAULT_MAX_TRAIL_POINTS = 300000; // Performance budget: Npoints * trailLength.
-const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
-
 const computePercentileRange = (values) => {
   if (!values || values.length === 0) return null;
   values.sort((a, b) => a - b);
@@ -68,6 +66,7 @@ const ChaosManager = ({
   const autoSpeedMinRef = useRef(0);
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
+  const lastClampWarningRef = useRef("");
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -91,6 +90,39 @@ const ChaosManager = ({
     const maxTrail = Math.floor(65535 / Math.max(Npoints, 1));
     return Math.max(1, Math.min(budgetTrailLength, maxTrail));
   }, [supportsUint32Indices, budgetTrailLength, Npoints]);
+
+  useEffect(() => {
+    if (renderTrailLength === trailLength) {
+      lastClampWarningRef.current = "";
+      return;
+    }
+    if (lastClampWarningRef.current === "clamped") return;
+    lastClampWarningRef.current = "clamped";
+    const requestedPoints = trailLength * Math.max(1, Npoints);
+    const clampReasons = [];
+    if (budgetCap < trailLength) {
+      clampReasons.push("performance budget");
+    }
+    if (!supportsUint32Indices && renderTrailLength < budgetTrailLength) {
+      clampReasons.push("WebGL index limit");
+    }
+    const clampReasonText =
+      clampReasons.length > 0 ? ` (${clampReasons.join(", ")})` : "";
+    const budgetInfo =
+      budgetCap < trailLength
+        ? `, budget cap ${NUMBER_FORMATTER.format(budgetCap)} (requested ${NUMBER_FORMATTER.format(requestedPoints)})`
+        : "";
+    console.warn(
+      `Trail length clamped to ${renderTrailLength} (requested ${trailLength}${budgetInfo})${clampReasonText}.`
+    );
+  }, [
+    budgetCap,
+    budgetTrailLength,
+    Npoints,
+    renderTrailLength,
+    supportsUint32Indices,
+    trailLength,
+  ]);
 
   const initialPositions = useMemo(() => {
     const positions = [];
@@ -480,44 +512,8 @@ const ChaosManager = ({
     }
   });
 
-  const clampReasons = [];
-  if (budgetCap < trailLength) {
-    clampReasons.push("performance budget");
-  }
-  if (!supportsUint32Indices && renderTrailLength < budgetTrailLength) {
-    clampReasons.push("WebGL index limit");
-  }
-  const clampReasonText =
-    clampReasons.length > 0 ? ` (${clampReasons.join(", ")})` : "";
-  const requestedPoints = trailLength * Math.max(1, Npoints);
-  const formatNumber = (value) => NUMBER_FORMATTER.format(value);
-  const budgetInfo =
-    budgetCap < trailLength
-      ? `, budget cap ${formatNumber(budgetCap)} (requested ${formatNumber(requestedPoints)})`
-      : "";
-
   return (
     <>
-      {renderTrailLength !== trailLength && (
-        <Html fullscreen style={{ pointerEvents: "none" }}>
-          <div
-            style={{
-              position: "absolute",
-              top: 12,
-              left: 12,
-              padding: "6px 10px",
-              background: "rgba(0, 0, 0, 0.6)",
-              color: "#fff",
-              fontFamily: "monospace",
-              fontSize: 12,
-              borderRadius: 6,
-            }}
-          >
-            Trail length clamped to {renderTrailLength} (requested {trailLength}
-            {budgetInfo}){clampReasonText}
-          </div>
-        </Html>
-      )}
       <instancedMesh
         key={Npoints}
         ref={sphereMeshRef}
