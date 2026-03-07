@@ -33,20 +33,23 @@ const LorenzAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return LorenzEquation(x, y, z, dtLocal, { a, b, c });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => LorenzEquation(x, y, z, dtLocal, { a, b, c }),
+    [a, b, c]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Lorenz">
-      <ChaosManager
-        equation={equation}
-        sharedParams={sharedParams}
-        lowSpeedColor={lowSpeedColor}
-        highSpeedColor={highSpeedColor}
-        freeze={freeze}
-        restartTrigger={restartTrigger}
-      />
+      <group position={[0, 0, -(b - 1)]}>
+        <ChaosManager
+          equation={equation}
+          sharedParams={sharedParams}
+          lowSpeedColor={lowSpeedColor}
+          highSpeedColor={highSpeedColor}
+          freeze={freeze}
+          restartTrigger={restartTrigger}
+        />
+      </group>
     </AttractorWrapper>
   );
 };

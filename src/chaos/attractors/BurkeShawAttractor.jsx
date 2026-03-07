@@ -33,9 +33,10 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BurkeShawEquation(x, y, z, dtLocal, { a, b });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => BurkeShawEquation(x, y, z, dtLocal, { a, b }),
+    [a, b]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw">

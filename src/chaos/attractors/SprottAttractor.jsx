@@ -32,9 +32,10 @@ const SprottAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return SprottEquation(x, y, z, dtLocal, { a });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => SprottEquation(x, y, z, dtLocal, { a }),
+    [a]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Sprott">

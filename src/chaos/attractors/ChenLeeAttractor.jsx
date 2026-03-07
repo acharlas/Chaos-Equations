@@ -36,9 +36,10 @@ const ChenLeeAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => ChenLeeEquation(x, y, z, dtLocal, { a, b, c }),
+    [a, b, c]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="ChenLee">

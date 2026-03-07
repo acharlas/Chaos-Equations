@@ -33,9 +33,10 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return NewtonLeipnikEquation(x, y, z, dtLocal, { a, b });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => NewtonLeipnikEquation(x, y, z, dtLocal, { a, b }),
+    [a, b]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="NewtonLeipnik">

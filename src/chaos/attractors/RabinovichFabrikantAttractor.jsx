@@ -33,36 +33,39 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    const k1 = RabinovichFabrikantEquation(x, y, z, dtLocal, { alpha, gamma });
-    const k2 = RabinovichFabrikantEquation(
-      x + k1[0] * 0.5,
-      y + k1[1] * 0.5,
-      z + k1[2] * 0.5,
-      dtLocal,
-      { alpha, gamma }
-    );
-    const k3 = RabinovichFabrikantEquation(
-      x + k2[0] * 0.5,
-      y + k2[1] * 0.5,
-      z + k2[2] * 0.5,
-      dtLocal,
-      { alpha, gamma }
-    );
-    const k4 = RabinovichFabrikantEquation(
-      x + k3[0],
-      y + k3[1],
-      z + k3[2],
-      dtLocal,
-      { alpha, gamma }
-    );
-
-    return [
-      (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6,
-      (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6,
-      (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6,
-    ];
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => {
+      const params = { alpha, gamma };
+      const k1 = RabinovichFabrikantEquation(x, y, z, dtLocal, params);
+      const k2 = RabinovichFabrikantEquation(
+        x + k1[0] * 0.5,
+        y + k1[1] * 0.5,
+        z + k1[2] * 0.5,
+        dtLocal,
+        params
+      );
+      const k3 = RabinovichFabrikantEquation(
+        x + k2[0] * 0.5,
+        y + k2[1] * 0.5,
+        z + k2[2] * 0.5,
+        dtLocal,
+        params
+      );
+      const k4 = RabinovichFabrikantEquation(
+        x + k3[0],
+        y + k3[1],
+        z + k3[2],
+        dtLocal,
+        params
+      );
+      return [
+        (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6,
+        (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6,
+        (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6,
+      ];
+    },
+    [alpha, gamma]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="RabinovichFabrikant">

@@ -27,17 +27,6 @@ const ChuaAttractor = ({ sharedParams }) => {
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
 
-  const params = {
-    a: aParam,
-    b: bParam,
-    k: kParam,
-    p: pParam,
-    q: qParam,
-    r: rParam,
-  };
-
-
-
   const lowSpeedColor = useMemo(
     () => new THREE.Color(lowSpeedHex),
     [lowSpeedHex]
@@ -47,9 +36,18 @@ const ChuaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, params);
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) =>
+      ChuaEquation(x, y, z, dtLocal, {
+        a: aParam,
+        b: bParam,
+        k: kParam,
+        p: pParam,
+        q: qParam,
+        r: rParam,
+      }),
+    [aParam, bParam, kParam, pParam, qParam, rParam]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Chua">

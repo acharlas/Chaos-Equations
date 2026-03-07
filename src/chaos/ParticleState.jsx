@@ -19,7 +19,6 @@ const ParticleState = forwardRef(({
   restartTrigger,
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
-  const wRef = useRef(0);
   const speedRef = useRef(0);
   const dtRef = useRef(dt);
   const equationRef = useRef(equation);
@@ -81,7 +80,6 @@ const ParticleState = forwardRef(({
       initialPosition[1],
       initialPosition[2]
     );
-    wRef.current = 0;
 
     const targetRef = trailTargetRef.current;
     const target = targetRef?.current ?? targetRef;
@@ -104,13 +102,7 @@ const ParticleState = forwardRef(({
     const pos = positionRef.current;
     const dtLocal =
       typeof dtOverride === "number" ? dtOverride : dtRef.current;
-    const [dx, dy, dz, dw] = equationRef.current(
-      pos.x,
-      pos.y,
-      pos.z,
-      dtLocal,
-      wRef.current
-    );
+    const [dx, dy, dz] = equationRef.current(pos.x, pos.y, pos.z, dtLocal);
     // dx/dy/dz are deltas (already multiplied by dt), so divide by dt for speed.
     speedRef.current =
       dtLocal !== 0 ? Math.hypot(dx, dy, dz) / dtLocal : 0;
@@ -118,9 +110,6 @@ const ParticleState = forwardRef(({
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
     pos.set(newX, newY, newZ);
-    if (typeof dw === "number") {
-      wRef.current += dw;
-    }
 
     if (writeTrail) {
       const targetRef = trailTargetRef.current;

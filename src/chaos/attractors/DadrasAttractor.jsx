@@ -36,9 +36,10 @@ const DadrasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e }),
+    [a, b, c, d, e]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Dadras">

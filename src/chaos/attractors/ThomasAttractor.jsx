@@ -32,9 +32,10 @@ const ThomasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ThomasEquation(x, y, z, dtLocal, { b });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => ThomasEquation(x, y, z, dtLocal, { b }),
+    [b]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Thomas">

@@ -32,9 +32,10 @@ const NoseHooverAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return NoseHooverEquation(x, y, z, dtLocal, { a });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => NoseHooverEquation(x, y, z, dtLocal, { a }),
+    [a]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover">

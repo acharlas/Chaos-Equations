@@ -37,9 +37,10 @@ const AizawaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f }),
+    [a, b, c, d, e, f]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Aizawa">

@@ -15,6 +15,23 @@ import NewtonLeipnikAttractor from "./chaos/attractors/NewtonLeipnikAttractor";
 import NoseHooverAttractor from "./chaos/attractors/NoseHooverAttractor";
 import ArneodoAttractor from "./chaos/attractors/ArneodoAttractor";
 
+const ATTRACTOR_COMPONENTS = {
+  Halvorsen: HalvorsenAttractor,
+  Lorenz: LorenzAttractor,
+  Aizawa: AizawaAttractor,
+  ChenLee: ChenLeeAttractor,
+  Thomas: ThomasAttractor,
+  Rossler: RosslerAttractor,
+  Chua: ChuaAttractor,
+  Dadras: DadrasAttractor,
+  Sprott: SprottAttractor,
+  Bouali: BoualiAttractor,
+  BurkeShaw: BurkeShawAttractor,
+  NewtonLeipnik: NewtonLeipnikAttractor,
+  NoseHoover: NoseHooverAttractor,
+  Arneodo: ArneodoAttractor,
+};
+
 const AttractorManager = ({ sharedParams }) => {
   const { attractor } = useControls({
     attractor: {
@@ -40,52 +57,8 @@ const AttractorManager = ({ sharedParams }) => {
     },
   });
 
-  return (
-    <>
-      {attractor === "Halvorsen" && (
-        <HalvorsenAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Lorenz" && (
-        <LorenzAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Aizawa" && (
-        <AizawaAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "ChenLee" && (
-        <ChenLeeAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Thomas" && (
-        <ThomasAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Rossler" && (
-        <RosslerAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Chua" && (
-        <ChuaAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Dadras" && (
-        <DadrasAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Sprott" && (
-        <SprottAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Bouali" && (
-        <BoualiAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "BurkeShaw" && (
-        <BurkeShawAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "NewtonLeipnik" && (
-        <NewtonLeipnikAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "NoseHoover" && (
-        <NoseHooverAttractor sharedParams={sharedParams} />
-      )}
-      {attractor === "Arneodo" && (
-        <ArneodoAttractor sharedParams={sharedParams} />
-      )}
-    </>
-  );
+  const Component = ATTRACTOR_COMPONENTS[attractor];
+  return Component ? <Component sharedParams={sharedParams} /> : null;
 };
 
 export default AttractorManager;

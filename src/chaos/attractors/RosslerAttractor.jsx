@@ -34,9 +34,10 @@ const RosslerAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return RosslerEquation(x, y, z, dtLocal, { a, b, c });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => RosslerEquation(x, y, z, dtLocal, { a, b, c }),
+    [a, b, c]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Rossler">

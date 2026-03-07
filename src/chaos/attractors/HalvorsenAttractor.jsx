@@ -32,9 +32,10 @@ const HalvorsenAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return HalvorsenEquation(x, y, z, dtLocal, { a });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => HalvorsenEquation(x, y, z, dtLocal, { a }),
+    [a]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen">

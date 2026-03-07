@@ -34,9 +34,10 @@ const BoualiAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BoualiEquation(x, y, z, dtLocal, { a, b, c });
-  };
+  const equation = useMemo(
+    () => (x, y, z, dtLocal) => BoualiEquation(x, y, z, dtLocal, { a, b, c }),
+    [a, b, c]
+  );
 
   return (
     <AttractorWrapper globalScale={globalScale} attractorId="Bouali">
