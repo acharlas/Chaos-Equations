@@ -8,6 +8,7 @@ export const useAutoSpeedRange = () => {
   const autoSpeedMinRef = useRef(0);
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
+  const sortedBufferRef = useRef(new Float32Array(0));
 
   const reset = useCallback(() => {
     autoRangeInitializedRef.current = false;
@@ -16,7 +17,7 @@ export const useAutoSpeedRange = () => {
   const updateRange = useCallback((speedList) => {
     if (!speedList || speedList.length === 0) return null;
 
-    const range = computePercentileRange(speedList);
+    const range = computePercentileRange(speedList, sortedBufferRef.current);
     const frameMin = range?.min;
     const frameMax = range?.max;
 

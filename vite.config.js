@@ -11,4 +11,14 @@ export default defineConfig({
   },
   plugins: [react()],
   base: "/Chaos-Equations",
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "three-vendor": ["three", "@react-three/fiber", "@react-three/drei"],
+          "leva-vendor": ["leva"],
+        },
+      },
+    },
+  },
 });
