@@ -14,7 +14,6 @@ const CameraResetButton = ({ controlsRef }) => {
           camera.updateProjectionMatrix();
         }
         camera.lookAt(0, 0, 0);
-        console.log("Camera reset to:", camera.position);
         if (controlsRef && controlsRef.current && controlsRef.current.reset) {
           controlsRef.current.reset();
         }
