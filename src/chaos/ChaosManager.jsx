@@ -1,13 +1,13 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import ParticleState from "./ParticleState";
 import { useTrailGeometry } from "./hooks/useTrailGeometry";
 import { useAutoSpeedRange } from "./hooks/useAutoSpeedRange";
+import { useParticleSystem } from "./hooks/useParticleSystem";
 import { computeGamma } from "./utils/colorUtils";
 
 const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
-const SPEED_RANGE_UPDATE_INTERVAL = 10;
+const SPEED_RANGE_UPDATE_INTERVAL = 30;
 const MAX_SPEED_SAMPLES = 2000;
 
 const ChaosManager = ({
@@ -53,12 +53,13 @@ const ChaosManager = ({
   } = useTrailGeometry(Npoints, trailLength, maxTrailPoints, supportsUint32Indices);
 
   const { updateRange, reset: resetSpeedRange, getCurrentRange } = useAutoSpeedRange();
+  const { restart, stepAll, getPosition, getSpeed } = useParticleSystem(Npoints);
 
-  const particleRefs = useRef([]);
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
   const globalWriteIndexRef = useRef(0);
   const speedListRef = useRef([]);
+  const speedCacheRef = useRef(new Float32Array(0));
   const frameCountRef = useRef(0);
   const lastClampWarningRef = useRef("");
 
@@ -109,8 +110,11 @@ const ChaosManager = ({
   }, [Npoints, restartTrigger]);
 
   useEffect(() => {
-    particleRefs.current = particleRefs.current.slice(0, Npoints);
-  }, [Npoints]);
+    if (speedCacheRef.current.length !== Npoints) {
+      speedCacheRef.current = new Float32Array(Npoints);
+    }
+    restart(initialPositions);
+  }, [Npoints, restart, initialPositions]);
 
   useEffect(() => {
     const speeds = speedsRef.current;
@@ -124,8 +128,9 @@ const ChaosManager = ({
   }, [renderTrailLength, restartTrigger, Npoints]);
 
   useEffect(() => {
+    restart(initialPositions);
     resetSpeedRange();
-  }, [restartTrigger, resetSpeedRange]);
+  }, [restartTrigger, restart, initialPositions, resetSpeedRange]);
 
   useEffect(() => {
     if (!sphereMeshRef.current) return;
@@ -171,22 +176,19 @@ const ChaosManager = ({
 
   useFrame(() => {
     if (freeze) return;
-    const refs = particleRefs.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = positionAttrRef.current;
     const colorAttr = colorAttrRef.current;
     const colors = colorsRef.current;
     const trailSpeeds = speedsRef.current;
     const indexAttr = indexAttrRef.current;
-    const steps = Math.max(1, substeps);
-    const dtStep = dt / steps;
     const breakSegments = breakSegmentsRef.current;
     const speedList = speedListRef.current;
     const shouldUpdateRange =
       frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
     frameCountRef.current += 1;
     const sampleStride = shouldUpdateRange
-      ? Math.max(1, Math.floor(refs.length / MAX_SPEED_SAMPLES))
+      ? Math.max(1, Math.floor(Npoints / MAX_SPEED_SAMPLES))
       : 0;
     const lowCol = lowSpeedColor;
     const highCol = highSpeedColor;
@@ -203,27 +205,30 @@ const ChaosManager = ({
     let maxIndexUpdate = -Infinity;
     speedList.length = 0;
 
-    for (let i = 0; i < refs.length; i++) {
-      const particle = refs[i];
-      if (!particle) continue;
-      let position = null;
-      for (let s = 0; s < steps; s++) {
-        position = particle.step(currentWriteIndex, s === steps - 1, dtStep);
-      }
-      if (mesh && position) {
-        tempMatrix.current.identity();
-        tempMatrix.current.setPosition(position);
+    // Bulk step all particles
+    stepAll({
+      writeIndex: currentWriteIndex,
+      dt,
+      substeps,
+      equation,
+      freeze,
+      trailTarget: positionsRef,
+      trailLength: renderTrailLength,
+    });
+
+    // Update mesh matrices and sample speeds
+    for (let i = 0; i < Npoints; i++) {
+      const pos = getPosition(i);
+      const speed = getSpeed(i);
+      speedCacheRef.current[i] = speed;
+
+      if (mesh) {
+        tempMatrix.current.setPosition(pos.x, pos.y, pos.z);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      const rawSpeed = particle.getSpeed();
 
-      if (
-        shouldUpdateRange &&
-        nextWriteIndex >= 0 &&
-        Number.isFinite(rawSpeed) &&
-        i % sampleStride === 0
-      ) {
-        speedList.push(rawSpeed);
+      if (shouldUpdateRange && nextWriteIndex >= 0 && i % sampleStride === 0) {
+        speedList.push(speed);
       }
       if (indexAttr && renderTrailLength > 1 && nextWriteIndex >= 0) {
         const nextBreak =
@@ -280,11 +285,10 @@ const ChaosManager = ({
     if (renderTrailLength > 0) {
       const lastIndex =
         nextWriteIndex === 0 ? renderTrailLength - 1 : nextWriteIndex - 1;
-      for (let i = 0; i < refs.length; i++) {
+      for (let i = 0; i < Npoints; i++) {
         const pointIndex = lastIndex * Npoints + i;
         const offset = pointIndex * 3;
-        const rawSpeed = refs[i]?.getSpeed?.();
-        const speed = Number.isFinite(rawSpeed) ? rawSpeed : 0;
+        const speed = speedCacheRef.current[i];
         if (pointIndex < trailSpeeds.length) {
           trailSpeeds[pointIndex] = speed;
         }
@@ -350,23 +354,6 @@ const ChaosManager = ({
       <lineSegments geometry={geometryRef.current} frustumCulled={false}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
-      {initialPositions.map((pos, idx) => (
-        <ParticleState
-          key={idx}
-          ref={(ref) => {
-            particleRefs.current[idx] = ref;
-          }}
-          initialPosition={pos}
-          dt={dt}
-          trailTarget={positionsRef}
-          trailLength={renderTrailLength}
-          particleIndex={idx}
-          totalParticles={Npoints}
-          equation={equation}
-          freeze={freeze}
-          restartTrigger={restartTrigger}
-        />
-      ))}
     </>
   );
 };
