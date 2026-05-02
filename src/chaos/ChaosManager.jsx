@@ -127,6 +127,24 @@ const ChaosManager = ({
     globalWriteIndexRef.current = renderTrailLength > 1 ? 1 : 0;
   }, [renderTrailLength, restartTrigger, Npoints]);
 
+  // When trail length changes, fill the new buffer with current particle positions
+  // so trails don't collapse to origin
+  useEffect(() => {
+    const positions = positionsRef.current;
+    if (!positions || positions.length === 0 || renderTrailLength <= 0) return;
+
+    for (let p = 0; p < Npoints; p++) {
+      const pos = getPosition(p);
+      for (let i = 0; i < renderTrailLength; i++) {
+        const base = (i * Npoints + p) * 3;
+        positions[base] = pos.x;
+        positions[base + 1] = pos.y;
+        positions[base + 2] = pos.z;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [renderTrailLength, Npoints]);
+
   useEffect(() => {
     restart(initialPositions);
     resetSpeedRange();
