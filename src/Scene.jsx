@@ -10,7 +10,7 @@ import { getSceneControls } from "./controls/SceneControls";
 extend({ UnrealBloomPass });
 
 const Scene = () => {
-  const Scene = useControls(getSceneControls());
+  const sceneParams = useControls(getSceneControls());
 
   const controlsRef = useRef();
 
@@ -32,7 +32,7 @@ const Scene = () => {
     bloom_threshold,
     bloom_strength,
     bloom_radius,
-  } = Scene;
+  } = sceneParams;
 
   const sharedParams = {
     dt,
