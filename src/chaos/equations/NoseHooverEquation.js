@@ -1,7 +1,6 @@
-export const NoseHooverEquation = (x, y, z, dt, params) => {
+export const NoseHooverEquation = (x, y, z, dt, params, out) => {
   const { a } = params;
-  const dx = y * dt;
-  const dy = (-x + y * z) * dt;
-  const dz = (a - y * y) * dt;
-  return [dx, dy, dz];
+  out[0] = y * dt;
+  out[1] = (-x + y * z) * dt;
+  out[2] = (a - y * y) * dt;
 };

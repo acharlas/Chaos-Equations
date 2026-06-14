@@ -5,9 +5,8 @@ import AttractorWrapper from "./AttractorWrapper";
 import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
 
-const ChenLeeAttractor = ({ sharedParams }) => {
+const ChenLeeAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const params = useControls({
     ChenLee: folder(
@@ -16,10 +15,9 @@ const ChenLeeAttractor = ({ sharedParams }) => {
         b: { value: -3, min: -10, max: 0, step: 0.1 },
         c: { value: -0.38, min: -1, max: 1, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
 
@@ -36,19 +34,18 @@ const ChenLeeAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    ChenLeeEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee">
+    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

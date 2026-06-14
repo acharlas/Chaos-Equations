@@ -5,9 +5,8 @@ import { ChuaEquation } from "../equations/ChuaEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const ChuaAttractor = ({ sharedParams }) => {
+const ChuaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { aParam, bParam, kParam, pParam, qParam, rParam } = useControls({
     Chua: folder(
@@ -19,10 +18,9 @@ const ChuaAttractor = ({ sharedParams }) => {
         qParam: { value: -0.0136, min: -0.1, max: 0, step: 0.0001, label: "q" },
         rParam: { value: -0.0297, min: -0.1, max: 0, step: 0.0001, label: "r" },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -47,19 +45,18 @@ const ChuaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, params);
+  const equation = (x, y, z, dtLocal, out) => {
+    ChuaEquation(x, y, z, dtLocal, params, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Chua">
+    <AttractorWrapper globalScale={globalScale} attractorId="Chua" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

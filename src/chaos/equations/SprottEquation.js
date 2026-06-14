@@ -1,7 +1,6 @@
-export const SprottEquation = (x, y, z, dt, params) => {
+export const SprottEquation = (x, y, z, dt, params, out) => {
   const { a } = params;
-  const dx = (y * z) * dt;
-  const dy = (x - y) * dt;
-  const dz = (a - x * y) * dt;
-  return [dx, dy, dz];
+  out[0] = y * z * dt;
+  out[1] = (x - y) * dt;
+  out[2] = (a - x * y) * dt;
 };

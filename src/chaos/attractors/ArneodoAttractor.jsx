@@ -5,9 +5,8 @@ import { ArneodoEquation } from "../equations/ArneodoEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const ArneodoAttractor = ({ sharedParams }) => {
+const ArneodoAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c } = useControls({
     Arneodo: folder(
@@ -16,10 +15,9 @@ const ArneodoAttractor = ({ sharedParams }) => {
         b: { value: 3.5, min: 0, max: 7, step: 0.1 },
         c: { value: 1, min: 0, max: 3, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -34,19 +32,18 @@ const ArneodoAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ArneodoEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    ArneodoEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Arneodo">
+    <AttractorWrapper globalScale={globalScale} attractorId="Arneodo" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

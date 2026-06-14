@@ -5,19 +5,17 @@ import { HalvorsenEquation } from "../equations/HalvorsenEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const HalvorsenAttractor = ({ sharedParams }) => {
+const HalvorsenAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a } = useControls({
     Halvorsen: folder(
       {
         a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -32,19 +30,18 @@ const HalvorsenAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return HalvorsenEquation(x, y, z, dtLocal, { a });
+  const equation = (x, y, z, dtLocal, out) => {
+    HalvorsenEquation(x, y, z, dtLocal, { a }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen">
+    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

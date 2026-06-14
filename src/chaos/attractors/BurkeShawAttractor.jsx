@@ -5,9 +5,8 @@ import { BurkeShawEquation } from "../equations/BurkeShawEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const BurkeShawAttractor = ({ sharedParams }) => {
+const BurkeShawAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b } = useControls({
     BurkeShaw: folder(
@@ -15,10 +14,9 @@ const BurkeShawAttractor = ({ sharedParams }) => {
         a: { value: 10, min: 5, max: 18, step: 0.1 },
         b: { value: 13, min: 5, max: 18, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -33,19 +31,18 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BurkeShawEquation(x, y, z, dtLocal, { a, b });
+  const equation = (x, y, z, dtLocal, out) => {
+    BurkeShawEquation(x, y, z, dtLocal, { a, b }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw">
+    <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

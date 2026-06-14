@@ -5,9 +5,8 @@ import { LorenzEquation } from "../equations/LorenzEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const LorenzAttractor = ({ sharedParams }) => {
+const LorenzAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c } = useControls({
     Lorenz: folder(
@@ -16,10 +15,9 @@ const LorenzAttractor = ({ sharedParams }) => {
         b: { value: 28, min: 15, max: 45, step: 1 },
         c: { value: 2.67, min: 1, max: 5, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
 
@@ -33,19 +31,18 @@ const LorenzAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return LorenzEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    LorenzEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Lorenz">
+    <AttractorWrapper globalScale={globalScale} attractorId="Lorenz" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

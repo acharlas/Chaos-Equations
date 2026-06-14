@@ -5,9 +5,8 @@ import { BoualiEquation } from "../equations/BoualiEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const BoualiAttractor = ({ sharedParams }) => {
+const BoualiAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c } = useControls({
     Bouali: folder(
@@ -16,10 +15,9 @@ const BoualiAttractor = ({ sharedParams }) => {
         b: { value: 1, min: 0, max: 2, step: 0.01 },
         c: { value: 1, min: 0, max: 2, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -34,19 +32,18 @@ const BoualiAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BoualiEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    BoualiEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Bouali">
+    <AttractorWrapper globalScale={globalScale} attractorId="Bouali" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

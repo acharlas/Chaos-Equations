@@ -2,65 +2,85 @@ import React, { useRef } from "react";
 import { Canvas, extend } from "@react-three/fiber";
 import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
 import { UnrealBloomPass } from "three-stdlib";
-import { useControls } from "leva";
+import { folder, useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
+import BenchmarkHarness from "./perf/BenchmarkHarness";
+import AdvancedControls from "./chaos/AdvancedControls";
 
 extend({ UnrealBloomPass });
 
 const Scene = () => {
   const Scene = useControls(getSceneControls());
-
-  const controlsRef = useRef();
+  const { cameraDistance, showAdvanced, showStars, showStats } = useControls({
+    View: folder(
+      {
+        cameraDistance: {
+          value: 240,
+          min: 80,
+          max: 2000,
+          step: 20,
+          label: "Camera Distance",
+        },
+        showStars: { value: true, label: "Show Stars" },
+        showStats: { value: false, label: "Show Stats" },
+        showAdvanced: { value: false, label: "Show advanced" },
+      },
+      { collapsed: true, order: -6 },
+    ),
+  });
 
   const {
     Npoints,
     trailLength,
+    timeScale,
     lowSpeedHex,
     highSpeedHex,
-    speedContrast,
     globalScale,
-    dt,
-    substeps,
-    showStats,
-    showStars,
-    maxDpr,
-    maxTrailPoints,
-
     bloom,
     bloom_threshold,
     bloom_strength,
     bloom_radius,
   } = Scene;
 
+  const SUBSTEPS = 2;
+  const BASE_DT = 0.003;
+  const dt = BASE_DT * timeScale;
+
   const sharedParams = {
     dt,
-    substeps,
+    substeps: SUBSTEPS,
     Npoints,
     trailLength,
     lowSpeedHex,
     highSpeedHex,
-    speedContrast,
     globalScale,
-    maxTrailPoints,
   };
+
+  const controlsRef = useRef();
 
   return (
     <Canvas
       shadows
       gl={{ antialias: true }}
-      dpr={[1, maxDpr]}
+      dpr={[1, 2]}
       camera={{
-        position: [-140, -140, -160],
+        position: [
+          -cameraDistance * 0.7,
+          -cameraDistance * 0.7,
+          -cameraDistance * 0.8,
+        ],
         fov: 75,
         near: 0.01,
-        far: 3000,
+        far: 5000,
       }}
     >
       {showStars && <Stars radius={1200} depth={1} />}
       {showStats && <Stats className="stats-panel" />}
       <AttractorManager sharedParams={sharedParams} />
+      {showAdvanced && <BenchmarkHarness />}
+      {showAdvanced && <AdvancedControls />}
       {bloom && (
         <Effects disableGamma>
           <unrealBloomPass

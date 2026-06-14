@@ -5,9 +5,8 @@ import { RosslerEquation } from "../equations/RosslerEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const RosslerAttractor = ({ sharedParams }) => {
+const RosslerAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c } = useControls({
     Rossler: folder(
@@ -16,10 +15,9 @@ const RosslerAttractor = ({ sharedParams }) => {
         b: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
         c: { value: 5.7, min: 2, max: 10, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -34,19 +32,18 @@ const RosslerAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return RosslerEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    RosslerEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Rossler">
+    <AttractorWrapper globalScale={globalScale} attractorId="Rossler" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

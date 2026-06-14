@@ -4,16 +4,16 @@ export const getSceneControls = () => ({
   Simulation: folder(
     {
       Npoints: {
-        value: 200,
+        value: 500,
         min: 1,
-        max: 600,
+        max: 1000,
         step: 1,
         label: "Particles",
       },
       trailLength: {
-        value: 200,
+        value: 400,
         min: 100,
-        max: 500,
+        max: 800,
         step: 10,
         label: "Trail Length",
       },
@@ -24,57 +24,23 @@ export const getSceneControls = () => ({
         step: 0.1,
         label: "Global Scale",
       },
-      dt: {
-        value: 0.003,
-        min: 0.0002,
-        max: 0.01,
-        step: 0.0001,
-        label: "Time Step",
-      },
-      substeps: {
-        value: 2,
-        min: 1,
-        max: 6,
-        step: 1,
-        label: "Substeps",
+      timeScale: {
+        value: 1.0,
+        min: 0.25,
+        max: 4,
+        step: 0.05,
+        label: "Time Scale",
       },
     },
-    { collapsed: false }
+    { collapsed: false, order: -5 },
   ),
 
   Colors: folder(
     {
       lowSpeedHex: { value: "#0000ff", label: "Low Speed Color" },
       highSpeedHex: { value: "#00ff00", label: "High Speed Color" },
-      speedContrast: {
-        value: 0.55,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        label: "Speed Color Boost",
-      },
     },
-    { collapsed: false }
-  ),
-
-  Performance: folder(
-    {
-      maxDpr: {
-        value: 1.25,
-        min: 0.75,
-        max: 2,
-        step: 0.1,
-        label: "Render Resolution",
-      },
-      maxTrailPoints: {
-        value: 300000,
-        min: 50000,
-        max: 800000,
-        step: 10000,
-        label: "Trail Budget (particles × trail length)",
-      },
-    },
-    { collapsed: true }
+    { collapsed: false, order: -4 },
   ),
 
   Effects: folder(
@@ -104,17 +70,9 @@ export const getSceneControls = () => ({
             label: "Radius",
           },
         },
-        { collapsed: true }
+        { collapsed: true },
       ),
     },
-    { collapsed: true }
-  ),
-
-  View: folder(
-    {
-      showStats: { value: false, label: "Show Stats" },
-      showStars: { value: true, label: "Show Stars" },
-    },
-    { collapsed: true }
+    { collapsed: true, order: -3 },
   ),
 });

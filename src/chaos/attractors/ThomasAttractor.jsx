@@ -5,19 +5,17 @@ import AttractorWrapper from "./AttractorWrapper";
 import { ThomasEquation } from "../equations/ThomasEquation";
 import * as THREE from "three";
 
-const ThomasAttractor = ({ sharedParams }) => {
+const ThomasAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { b } = useControls({
     Thomas: folder(
       {
         b: { value: 0.19, min: 0.12, max: 0.3, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -32,19 +30,18 @@ const ThomasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ThomasEquation(x, y, z, dtLocal, { b });
+  const equation = (x, y, z, dtLocal, out) => {
+    ThomasEquation(x, y, z, dtLocal, { b }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Thomas">
+    <AttractorWrapper globalScale={globalScale} attractorId="Thomas" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

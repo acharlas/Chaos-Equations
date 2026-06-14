@@ -5,9 +5,8 @@ import { DadrasEquation } from "../equations/DadrasEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const DadrasAttractor = ({ sharedParams }) => {
+const DadrasAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c, d, e } = useControls({
     Dadras: folder(
@@ -18,10 +17,9 @@ const DadrasAttractor = ({ sharedParams }) => {
         d: { value: 2, min: 1, max: 3, step: 0.1 },
         e: { value: 9, min: 5, max: 12, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -36,19 +34,18 @@ const DadrasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e });
+  const equation = (x, y, z, dtLocal, out) => {
+    DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Dadras">
+    <AttractorWrapper globalScale={globalScale} attractorId="Dadras" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

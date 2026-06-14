@@ -5,19 +5,17 @@ import { SprottEquation } from "../equations/SprottEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const SprottAttractor = ({ sharedParams }) => {
+const SprottAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a } = useControls({
     Sprott: folder(
       {
         a: { value: 1, min: -1.5, max: 1.5, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -32,19 +30,18 @@ const SprottAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return SprottEquation(x, y, z, dtLocal, { a });
+  const equation = (x, y, z, dtLocal, out) => {
+    SprottEquation(x, y, z, dtLocal, { a }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Sprott">
+    <AttractorWrapper globalScale={globalScale} attractorId="Sprott" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

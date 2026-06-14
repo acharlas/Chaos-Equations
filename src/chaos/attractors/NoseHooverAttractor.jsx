@@ -5,19 +5,17 @@ import { NoseHooverEquation } from "../equations/NoseHooverEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const NoseHooverAttractor = ({ sharedParams }) => {
+const NoseHooverAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a } = useControls({
     NoseHoover: folder(
       {
         a: { value: 1.5, min: 0.5, max: 3, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -32,19 +30,18 @@ const NoseHooverAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return NoseHooverEquation(x, y, z, dtLocal, { a });
+  const equation = (x, y, z, dtLocal, out) => {
+    NoseHooverEquation(x, y, z, dtLocal, { a }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover">
+    <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

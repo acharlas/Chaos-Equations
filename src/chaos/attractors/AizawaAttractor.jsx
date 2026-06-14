@@ -5,9 +5,8 @@ import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 import { AizawaEquation } from "../equations/AizawaEquation";
 
-const AizawaAttractor = ({ sharedParams }) => {
+const AizawaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c, d, e, f } = useControls({
     Aizawa: folder(
@@ -19,10 +18,9 @@ const AizawaAttractor = ({ sharedParams }) => {
         e: { value: 0.25, min: 0, max: 0.8, step: 0.01 },
         f: { value: 0.1, min: 0, max: 0.8, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -37,19 +35,18 @@ const AizawaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f });
+  const equation = (x, y, z, dtLocal, out) => {
+    AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f }, out);
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Aizawa">
+    <AttractorWrapper globalScale={globalScale} attractorId="Aizawa" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );
