@@ -19,7 +19,6 @@ const ParticleState = forwardRef(({
   restartTrigger,
 }, ref) => {
   const positionRef = useRef(new THREE.Vector3());
-  const wRef = useRef(0);
   const speedRef = useRef(0);
   const dtRef = useRef(dt);
   const equationRef = useRef(equation);
@@ -81,7 +80,6 @@ const ParticleState = forwardRef(({
       initialPosition[1],
       initialPosition[2]
     );
-    wRef.current = 0;
 
     const targetRef = trailTargetRef.current;
     const target = targetRef?.current ?? targetRef;
@@ -109,14 +107,13 @@ const ParticleState = forwardRef(({
       pos.y,
       pos.z,
       dtLocal,
-      wRef.current,
       eqOut,
     );
     const dx = eqOut[0];
     const dy = eqOut[1];
     const dz = eqOut[2];
-    speedRef.current =
-      dtLocal !== 0 ? Math.hypot(dx, dy, dz) / dtLocal : 0;
+    const speedSq = dx * dx + dy * dy + dz * dz;
+    speedRef.current = dtLocal !== 0 ? Math.sqrt(speedSq) / dtLocal : 0;
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
