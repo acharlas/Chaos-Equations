@@ -6,75 +6,102 @@ import { FrameProfiler, formatReport } from "./frameProfiler.js";
 const PROFILER_CAPACITY = 1800;
 const ROLLING_CAPACITY = 120;
 
-const BenchmarkHarness = () => {
-  const profilerRef = useRef(new FrameProfiler(PROFILER_CAPACITY));
+const LiveHud = ({ hudTextRef }) => {
   const rollingRef = useRef(new FrameProfiler(ROLLING_CAPACITY));
-  const hudTextRef = useRef("fps: --  ms: --");
-  const statusRef = useRef("idle");
-  const reportTextRef = useRef("press a benchmark button");
-  const lastConfigRef = useRef("—");
-  const [status, setStatus] = useState("idle");
-  const hudTimerRef = useRef(0);
 
   useFrame(({ clock }) => {
-    const t = clock.elapsedTime * 1000;
-    profilerRef.current.tick(t);
-    rollingRef.current.tick(t);
+    rollingRef.current.tick(clock.elapsedTime * 1000);
   });
 
   useEffect(() => {
     const updateHud = () => {
-      const live = rollingRef.current.getReport({ warmupFrames: 5 });
-      if (!live) {
+      const r = rollingRef.current.getReport({ warmupFrames: 5 });
+      if (!r) {
         hudTextRef.current = "fps: --  ms: --";
         return;
       }
-      hudTextRef.current = `fps: ${live.fps.toFixed(1)}  ms avg: ${live.avgMs.toFixed(2)}  p95: ${live.p95Ms.toFixed(2)}`;
+      hudTextRef.current = `fps rAF: ${r.fps.toFixed(0)}  ms: ${r.avgMs.toFixed(2)}`;
     };
     updateHud();
-    hudTimerRef.current = setInterval(updateHud, 250);
-    return () => clearInterval(hudTimerRef.current);
-  }, []);
-
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
+    const id = setInterval(updateHud, 250);
+    return () => clearInterval(id);
+  }, [hudTextRef]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.__chaos = window.__chaos || {};
-    const runBenchmark = (opts = {}) => {
+    window.__chaos.rollingHud = rollingRef.current;
+  }, []);
+
+  return null;
+};
+
+const WorkTimeProbe = ({ active }) => {
+  const profilerRef = useRef(new FrameProfiler(PROFILER_CAPACITY));
+  const workRef = useRef(0);
+
+  useFrame((state) => {
+    if (!active) return;
+    const t0 = state.clock.elapsedTime * 1000;
+    if (state.gl.render) state.gl.render(state.scene, state.camera);
+    const t1 = performance.now();
+    const workMs = t1 - t0;
+    workRef.current = workMs;
+    profilerRef.current.recordDelta(workMs);
+  }, 1000);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.__chaos = window.__chaos || {};
+    window.__chaos.workProbe = {
+      profiler: profilerRef.current,
+      getLastWorkMs: () => workRef.current,
+      getReport: (opts) => profilerRef.current.getReport(opts),
+    };
+  }, []);
+
+  return null;
+};
+
+const BenchmarkHarness = () => {
+  const hudTextRef = useRef("press Run 10s to start a benchmark");
+  const reportTextRef = useRef("press a benchmark button");
+  const lastConfigRef = useRef("—");
+  const statusRef = useRef("idle");
+  const [running, setRunning] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.__chaos = window.__chaos || {};
+    const runBenchmark = async (opts = {}) => {
       const durationSec = opts.durationSec ?? 10;
       const warmupFrames = opts.warmupFrames ?? 30;
       const label = opts.label ?? "manual";
-      const profiler = profilerRef.current;
-      profiler.reset();
-      profiler.start();
-      rollingRef.current.reset();
-      rollingRef.current.start();
-      setStatus("running");
+      statusRef.current = "running";
       reportTextRef.current = `running for ${durationSec}s...`;
       lastConfigRef.current = `${label} • ${durationSec}s • warmup=${warmupFrames}`;
+      setRunning(true);
+      await new Promise((r) => setTimeout(r, 80));
       return new Promise((resolve) => {
         setTimeout(() => {
-          profiler.stop();
-          const r = profiler.getReport({ warmupFrames });
-          setStatus(r ? "done" : "no-samples");
-          if (r) {
-            reportTextRef.current = `avg ${r.avgMs.toFixed(2)} ms • p95 ${r.p95Ms.toFixed(2)} ms • p99 ${r.p99Ms.toFixed(2)} ms • ${r.fps.toFixed(1)} fps • ${r.frames} frames`;
-            console.log(`[chaos benchmark] ${label}\n${formatReport(r)}`);
-            console.log(`[chaos benchmark] ${label} (json)`, r);
+          setRunning(false);
+          const probe = window.__chaos.workProbe;
+          const rWork = probe?.getReport({ warmupFrames });
+          if (rWork) {
+            reportTextRef.current = `WORK  ms avg ${rWork.avgMs.toFixed(2)}  p50 ${rWork.p50Ms.toFixed(2)}  p95 ${rWork.p95Ms.toFixed(2)}  p99 ${rWork.p99Ms.toFixed(2)}  fps uncapped ${rWork.fps.toFixed(1)}  (${rWork.frames} frames in ${rWork.durationSec.toFixed(2)}s)`;
+            console.log(`[chaos benchmark] ${label} (work)\n${formatReport(rWork)}`);
+            console.log(`[chaos benchmark] ${label} (json)`, rWork);
+            statusRef.current = "done";
           } else {
             reportTextRef.current = "not enough samples";
+            statusRef.current = "no-samples";
             console.warn(`[chaos benchmark] ${label}: not enough samples`);
           }
-          resolve(r);
+          resolve(rWork);
         }, durationSec * 1000);
       });
     };
     window.__chaos.benchmark = runBenchmark;
-    window.__chaos.profiler = profilerRef.current;
-    window.__chaos.rollingProfiler = rollingRef.current;
     return () => {
       if (window.__chaos.benchmark === runBenchmark) {
         delete window.__chaos.benchmark;
@@ -112,7 +139,12 @@ const BenchmarkHarness = () => {
     }),
   });
 
-  return null;
+  return (
+    <>
+      <LiveHud hudTextRef={hudTextRef} />
+      {running && <WorkTimeProbe active={running} />}
+    </>
+  );
 };
 
 export default BenchmarkHarness;

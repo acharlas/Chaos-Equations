@@ -22,6 +22,22 @@ describe("FrameProfiler", () => {
     expect(profiler.frames[1]).toBeCloseTo(16.66, 5);
   });
 
+  it("recordDelta stores the delta directly (uncapped work-time path)", () => {
+    profiler.start();
+    profiler.recordDelta(5);
+    profiler.recordDelta(5);
+    profiler.recordDelta(7);
+    expect(profiler.count).toBe(3);
+    expect(profiler.frames[0]).toBe(5);
+    expect(profiler.frames[1]).toBe(5);
+    expect(profiler.frames[2]).toBe(7);
+  });
+
+  it("recordDelta is ignored when inactive", () => {
+    profiler.recordDelta(5);
+    expect(profiler.count).toBe(0);
+  });
+
   it("wraps the buffer when capacity is reached", () => {
     const small = new FrameProfiler(4);
     small.start();

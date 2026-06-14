@@ -25,6 +25,20 @@ export class FrameProfiler {
     }
   }
 
+  recordDelta(deltaMs) {
+    if (!this.active) return;
+    if (this.lastTs < 0) {
+      this.lastTs = 0;
+      this.startTs = 0;
+    }
+    if (this.count < this.capacity) {
+      this.frames[this.count] = deltaMs;
+      this.timestamps[this.count] =
+        typeof performance !== "undefined" ? performance.now() : 0;
+      this.count += 1;
+    }
+  }
+
   start() {
     this.count = 0;
     this.lastTs = -1;
