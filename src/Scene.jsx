@@ -6,6 +6,7 @@ import { useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
+import BenchmarkHarness from "./perf/BenchmarkHarness";
 
 extend({ UnrealBloomPass });
 
@@ -60,6 +61,7 @@ const Scene = () => {
     >
       {showStars && <Stars radius={1200} depth={1} />}
       {showStats && <Stats className="stats-panel" />}
+      <BenchmarkHarness />
       <AttractorManager sharedParams={sharedParams} />
       {bloom && (
         <Effects disableGamma>
