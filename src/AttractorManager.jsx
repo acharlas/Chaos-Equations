@@ -75,11 +75,9 @@ const AttractorManager = ({ sharedParams }) => {
       { value: id === "Halvorsen", label },
     ]),
   );
-  const selections = useControls(
-    "Attractors",
-    folder(defaults, { collapsed: false }),
-    { order: -2 },
-  );
+  const selections = useControls({
+    Attractors: folder(defaults, { collapsed: false }),
+  });
 
   const selected = useMemo(
     () =>
