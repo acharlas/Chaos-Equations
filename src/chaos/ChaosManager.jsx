@@ -68,6 +68,10 @@ const ChaosManager = ({
   const autoRangeInitializedRef = useRef(false);
   const lastClampWarningRef = useRef("");
   const eqOutRef = useRef(new Float32Array(3));
+  const gammaRef = useRef(1);
+  const drRef = useRef(0);
+  const dgRef = useRef(0);
+  const dbRef = useRef(0);
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -231,6 +235,19 @@ const ChaosManager = ({
   }, [Npoints, renderTrailLength]);
 
   useEffect(() => {
+    gammaRef.current = Math.max(
+      1e-3,
+      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4),
+    );
+  }, [speedContrast]);
+
+  useEffect(() => {
+    drRef.current = highSpeedColor.r - lowSpeedColor.r;
+    dgRef.current = highSpeedColor.g - lowSpeedColor.g;
+    dbRef.current = highSpeedColor.b - lowSpeedColor.b;
+  }, [lowSpeedColor, highSpeedColor]);
+
+  useEffect(() => {
     const colorAttr = trailColorAttrRef.current;
     const colors = trailColorsRef.current;
     if (!colorAttr || colors.length === 0) return;
@@ -309,10 +326,9 @@ const ChaosManager = ({
       ? Math.max(1, Math.floor(refs.length / MAX_SPEED_SAMPLES))
       : 0;
     const lowCol = lowSpeedColor;
-    const highCol = highSpeedColor;
-    const dr = highCol.r - lowCol.r;
-    const dg = highCol.g - lowCol.g;
-    const db = highCol.b - lowCol.b;
+    const dr = drRef.current;
+    const dg = dgRef.current;
+    const db = dbRef.current;
     const currentWriteIndex =
       renderTrailLength > 0 ? globalWriteIndexRef.current : -1;
     const nextWriteIndex =
@@ -434,10 +450,7 @@ const ChaosManager = ({
       autoRangeInitializedRef.current = false;
     }
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
-    const gamma = Math.max(
-      1e-3,
-      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4)
-    );
+    const gamma = gammaRef.current;
     let minColorUpdate = null;
     let maxColorUpdate = null;
     let minPositionUpdate = null;
