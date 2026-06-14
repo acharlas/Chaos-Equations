@@ -108,9 +108,8 @@ const AttractorManager = ({ sharedParams }) => {
   const selected = useMemo(() => {
     const out = [];
     ATTRACTOR_GROUPS.forEach((group) => {
-      const groupVals = selections?.[group.label] ?? {};
       group.ids.forEach((id) => {
-        if (groupVals[id]) out.push(id);
+        if (selections?.[id]) out.push(id);
       });
     });
     return out;
