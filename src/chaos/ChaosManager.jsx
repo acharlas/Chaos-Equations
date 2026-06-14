@@ -37,6 +37,7 @@ const ChaosManager = ({
   const trailPositionAttrRef = useRef(null);
   const trailColorAttrRef = useRef(null);
   const trailIndexAttrRef = useRef(null);
+  const breakSegmentsRef = useRef([]);
   const globalWriteIndexRef = useRef(0);
   const speedListRef = useRef([]);
   const frameCountRef = useRef(0);
@@ -146,6 +147,7 @@ const ChaosManager = ({
     initPosYRef.current = initY;
     initPosZRef.current = initZ;
     speedRef.current = new Float32Array(N);
+    breakSegmentsRef.current = new Array(N).fill(-1);
     autoRangeInitializedRef.current = false;
   }, [Npoints]);
 
@@ -232,7 +234,6 @@ const ChaosManager = ({
         totalPoints <= 65535 ? Uint16Array : Uint32Array;
       const indexArray = new IndexArrayType(segmentCount * 2);
       let index = 0;
-      const lastSlot = renderTrailLength - 1;
       for (let p = 0; p < Npoints; p++) {
         for (let i = 0; i < renderTrailLength; i++) {
           const a = i * Npoints + p;
@@ -240,10 +241,6 @@ const ChaosManager = ({
           indexArray[index++] = a;
           indexArray[index++] = b;
         }
-        const wrapOffset = p * renderTrailLength * 2 + lastSlot * 2;
-        const wrapV = lastSlot * Npoints + p;
-        indexArray[wrapOffset] = wrapV;
-        indexArray[wrapOffset + 1] = wrapV;
       }
       const indexAttr = new THREE.BufferAttribute(indexArray, 1);
       trailsGeometryRef.current.setIndex(indexAttr);
@@ -254,6 +251,8 @@ const ChaosManager = ({
       trailIndexAttrRef.current = null;
       trailsGeometryRef.current.setDrawRange(0, 0);
     }
+
+    breakSegmentsRef.current = new Array(Npoints).fill(-1);
 
     if (previousIndex && previousIndex !== trailsGeometryRef.current.getIndex()) {
       previousIndex.dispose?.();
@@ -351,8 +350,11 @@ const ChaosManager = ({
     const colorAttr = trailColorAttrRef.current;
     const colors = trailColorsRef.current;
     const trailSpeeds = trailSpeedsRef.current;
+    const indexAttr = trailIndexAttrRef.current;
+    const indexArray = indexAttr ? indexAttr.array : null;
     const steps = substeps > 0 ? substeps : 1;
     const dtStep = dt / steps;
+    const breakSegments = breakSegmentsRef.current;
     const speedSamples = speedRef.current;
     const speedList = speedListRef.current;
     const speedContrastVal = gammaRef.current;
@@ -377,12 +379,17 @@ const ChaosManager = ({
         : -1;
     const lastIndex =
       nextWriteIndex === 0 ? renderTrailLength - 1 : nextWriteIndex - 1;
+    const hasIndexBreak =
+      indexAttr !== null && renderTrailLength > 1 && nextWriteIndex >= 0;
     const hasColorUpdate = colorAttr !== null && colors.length > 0;
     const baseLastPointIndex = lastIndex * N;
     const baseLastPointOffset = baseLastPointIndex * 3;
     const baseTrailHeadOffset =
       nextWriteIndex >= 0 ? nextWriteIndex * N * 3 : -1;
+    const timeWrapSegment = nextWriteIndex;
     speedList.length = 0;
+    let minIndexUpdate = Infinity;
+    let maxIndexUpdate = -Infinity;
     for (let i = 0; i < N; i++) {
       let x = posX[i];
       let y = posY[i];
@@ -433,6 +440,29 @@ const ChaosManager = ({
       if (speedPointIndex < trailSpeeds.length) {
         trailSpeeds[speedPointIndex] = speed;
       }
+      if (hasIndexBreak && indexArray) {
+        const prevBreak = breakSegments[i] ?? -1;
+        if (prevBreak !== timeWrapSegment) {
+          const baseSegmentOffset = i * renderTrailLength * 2;
+          if (prevBreak >= 0) {
+            const restoreOffset = baseSegmentOffset + prevBreak * 2;
+            indexArray[restoreOffset] = prevBreak * N + i;
+            indexArray[restoreOffset + 1] =
+              ((prevBreak + 1) % renderTrailLength) * N + i;
+            if (restoreOffset < minIndexUpdate) minIndexUpdate = restoreOffset;
+            const restoreEnd = restoreOffset + 1;
+            if (restoreEnd > maxIndexUpdate) maxIndexUpdate = restoreEnd;
+          }
+          const breakOffset = baseSegmentOffset + timeWrapSegment * 2;
+          const v = timeWrapSegment * N + i;
+          indexArray[breakOffset] = v;
+          indexArray[breakOffset + 1] = v;
+          if (breakOffset < minIndexUpdate) minIndexUpdate = breakOffset;
+          const breakEnd = breakOffset + 1;
+          if (breakEnd > maxIndexUpdate) maxIndexUpdate = breakEnd;
+          breakSegments[i] = timeWrapSegment;
+        }
+      }
     }
     if (mesh) {
       mesh.instanceMatrix.needsUpdate = true;
@@ -469,6 +499,14 @@ const ChaosManager = ({
       positionAttr.updateRange.offset = baseTrailHeadOffset;
       positionAttr.updateRange.count = updateEnd - baseTrailHeadOffset;
       positionAttr.needsUpdate = true;
+    }
+    if (indexAttr && minIndexUpdate !== Infinity) {
+      if (!indexAttr.updateRange) {
+        indexAttr.updateRange = { offset: 0, count: -1 };
+      }
+      indexAttr.updateRange.offset = minIndexUpdate;
+      indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate;
+      indexAttr.needsUpdate = true;
     }
     if (colorAttr && hasColorUpdate) {
       const updateEnd = baseLastPointOffset + (N - 1) * 3 + 3;
