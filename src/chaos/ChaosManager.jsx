@@ -3,11 +3,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { computePercentileRange } from "./autoSpeedRange.js";
 
-const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
 const AUTO_SPEED_SMOOTHING = 0.15;
 const SPEED_RANGE_UPDATE_INTERVAL = 10;
 const MAX_SPEED_SAMPLES = 2000;
-const DEFAULT_MAX_TRAIL_POINTS = 300000;
 
 const ChaosManager = ({
   sharedParams,
@@ -26,7 +24,6 @@ const ChaosManager = ({
   const dt = sharedParams?.dt ?? 0.005;
   const substeps = sharedParams?.substeps ?? 1;
   const speedContrast = sharedParams?.speedContrast ?? 0.5;
-  const maxTrailPoints = sharedParams?.maxTrailPoints ?? DEFAULT_MAX_TRAIL_POINTS;
 
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
@@ -72,21 +69,11 @@ const ChaosManager = ({
     );
   }, [gl]);
 
-  const budgetCap = useMemo(() => {
-    const maxByBudget = Math.floor(maxTrailPoints / Math.max(1, Npoints));
-    return Math.max(1, maxByBudget);
-  }, [maxTrailPoints, Npoints]);
-
-  const budgetTrailLength = useMemo(
-    () => Math.min(trailLength, budgetCap),
-    [trailLength, budgetCap],
-  );
-
   const renderTrailLength = useMemo(() => {
-    if (supportsUint32Indices) return budgetTrailLength;
+    if (supportsUint32Indices) return trailLength;
     const maxTrail = Math.floor(65535 / Math.max(Npoints, 1));
-    return Math.max(1, Math.min(budgetTrailLength, maxTrail));
-  }, [supportsUint32Indices, budgetTrailLength, Npoints]);
+    return Math.max(1, Math.min(trailLength, maxTrail));
+  }, [supportsUint32Indices, trailLength, Npoints]);
 
   useEffect(() => {
     if (renderTrailLength === trailLength) {
@@ -95,26 +82,16 @@ const ChaosManager = ({
     }
     if (lastClampWarningRef.current === "clamped") return;
     lastClampWarningRef.current = "clamped";
-    const requestedPoints = trailLength * Math.max(1, Npoints);
     const clampReasons = [];
-    if (budgetCap < trailLength) {
-      clampReasons.push("performance budget");
-    }
-    if (!supportsUint32Indices && renderTrailLength < budgetTrailLength) {
+    if (!supportsUint32Indices) {
       clampReasons.push("WebGL index limit");
     }
     const clampReasonText =
       clampReasons.length > 0 ? ` (${clampReasons.join(", ")})` : "";
-    const budgetInfo =
-      budgetCap < trailLength
-        ? `, budget cap ${NUMBER_FORMATTER.format(budgetCap)} (requested ${NUMBER_FORMATTER.format(requestedPoints)})`
-        : "";
     console.warn(
-      `Trail length clamped to ${renderTrailLength} (requested ${trailLength}${budgetInfo})${clampReasonText}.`,
+      `Trail length clamped to ${renderTrailLength} (requested ${trailLength})${clampReasonText}.`,
     );
   }, [
-    budgetCap,
-    budgetTrailLength,
     Npoints,
     renderTrailLength,
     supportsUint32Indices,

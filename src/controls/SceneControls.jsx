@@ -66,13 +66,6 @@ export const getSceneControls = () => ({
         step: 0.1,
         label: "Render Resolution",
       },
-      maxTrailPoints: {
-        value: 300000,
-        min: 50000,
-        max: 800000,
-        step: 10000,
-        label: "Trail Budget (particles × trail length)",
-      },
     },
     { collapsed: true }
   ),
