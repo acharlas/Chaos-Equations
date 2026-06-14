@@ -30,16 +30,7 @@ const EQUATIONS = {
   Rossler: RosslerEquation,
 };
 
-function callWith(eq, x, y, z, dt, params) {
-  const out = new Float32Array(3);
-  const result = eq(x, y, z, dt, params, out);
-  if (result !== undefined) {
-    return result;
-  }
-  return out;
-}
-
-function timeLoop(eq, params, npoints, substeps, frames, dt, allocator) {
+function timeLoop(eq, params, npoints, substeps, frames, dt, withSpeed) {
   const pos = new Float32Array(npoints * 3);
   for (let i = 0; i < npoints; i++) {
     pos[i * 3] = Math.random() * 2 - 1;
@@ -47,7 +38,8 @@ function timeLoop(eq, params, npoints, substeps, frames, dt, allocator) {
     pos[i * 3 + 2] = Math.random() * 2 - 1;
   }
   const dtStep = dt / substeps;
-  const scratch = allocator === "out" ? new Float32Array(3) : null;
+  const out = new Float32Array(3);
+  let speedSink = 0;
   const t0 = performance.now();
   for (let f = 0; f < frames; f++) {
     for (let p = 0; p < npoints; p++) {
@@ -55,14 +47,21 @@ function timeLoop(eq, params, npoints, substeps, frames, dt, allocator) {
       const y = pos[p * 3 + 1];
       const z = pos[p * 3 + 2];
       for (let s = 0; s < substeps; s++) {
-        const ret = callWith(eq, x, y, z, dtStep, params);
-        pos[p * 3] = x + ret[0];
-        pos[p * 3 + 1] = y + ret[1];
-        pos[p * 3 + 2] = z + ret[2];
+        eq(x, y, z, dtStep, params, out);
+        const dx = out[0];
+        const dy = out[1];
+        const dz = out[2];
+        pos[p * 3] = x + dx;
+        pos[p * 3 + 1] = y + dy;
+        pos[p * 3 + 2] = z + dz;
+        if (withSpeed) {
+          const speedSq = dx * dx + dy * dy + dz * dz;
+          speedSink += Math.sqrt(speedSq);
+        }
       }
     }
   }
-  void scratch;
+  void speedSink;
   return performance.now() - t0;
 }
 
@@ -79,20 +78,36 @@ const REPEATS = 5;
 
 describe("integration throughput (CPU proxy)", () => {
   for (const [name, eq] of Object.entries(EQUATIONS)) {
-    it(`${name}: ${NPOINTS} particles x ${SUBSTEPS} substeps x ${FRAMES} frames (median of ${REPEATS})`, () => {
+    it(`${name}: eq-only ${NPOINTS} x ${SUBSTEPS} x ${FRAMES} (median of ${REPEATS})`, () => {
       const params = DEFAULTS[name];
       const times = [];
       for (let i = 0; i < REPEATS; i++) {
-        times.push(timeLoop(eq, params, NPOINTS, SUBSTEPS, FRAMES, DT, "array"));
+        times.push(timeLoop(eq, params, NPOINTS, SUBSTEPS, FRAMES, DT, false));
       }
       const med = median(times);
       const min = Math.min(...times);
       const max = Math.max(...times);
-      const totalSteps = NPOINTS * SUBSTEPS * FRAMES;
-      const nsPerStep = (med * 1e6) / totalSteps;
+      const nsPerStep = (med * 1e6) / (NPOINTS * SUBSTEPS * FRAMES);
       const fps = (1000 * FRAMES) / med;
       console.log(
-        `[bench] ${name.padEnd(22)} median ${med.toFixed(1).padStart(6)} ms (min ${min.toFixed(1)} max ${max.toFixed(1)})  ${fps.toFixed(0).padStart(5)} fps equiv  ${nsPerStep.toFixed(0).padStart(4)} ns/step`,
+        `[bench] ${name.padEnd(22)} eq-only   median ${med.toFixed(1).padStart(6)} ms (min ${min.toFixed(1)} max ${max.toFixed(1)})  ${fps.toFixed(0).padStart(5)} fps equiv  ${nsPerStep.toFixed(0).padStart(4)} ns/step`,
+      );
+      expect(med).toBeGreaterThan(0);
+    });
+
+    it(`${name}: eq+speed ${NPOINTS} x ${SUBSTEPS} x ${FRAMES} (median of ${REPEATS})`, () => {
+      const params = DEFAULTS[name];
+      const times = [];
+      for (let i = 0; i < REPEATS; i++) {
+        times.push(timeLoop(eq, params, NPOINTS, SUBSTEPS, FRAMES, DT, true));
+      }
+      const med = median(times);
+      const min = Math.min(...times);
+      const max = Math.max(...times);
+      const nsPerStep = (med * 1e6) / (NPOINTS * SUBSTEPS * FRAMES);
+      const fps = (1000 * FRAMES) / med;
+      console.log(
+        `[bench] ${name.padEnd(22)} +speed    median ${med.toFixed(1).padStart(6)} ms (min ${min.toFixed(1)} max ${max.toFixed(1)})  ${fps.toFixed(0).padStart(5)} fps equiv  ${nsPerStep.toFixed(0).padStart(4)} ns/step`,
       );
       expect(med).toBeGreaterThan(0);
     });

@@ -483,9 +483,6 @@ const ChaosManager = ({
     }
     if (mesh) {
       mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.computeBoundingSphere) {
-        mesh.computeBoundingSphere();
-      }
     }
     if (positionAttr && minPositionUpdate !== null) {
       if (!positionAttr.updateRange) {
@@ -520,6 +517,7 @@ const ChaosManager = ({
         key={Npoints}
         ref={sphereMeshRef}
         args={[null, null, Npoints]}
+        frustumCulled={false}
       >
         <sphereGeometry args={[0.01, 16, 16]} />
         <meshBasicMaterial
