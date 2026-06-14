@@ -1,7 +1,6 @@
-export const BoualiEquation = (x, y, z, dt, params) => {
+export const BoualiEquation = (x, y, z, dt, params, out) => {
   const { a, b, c } = params;
-  const dx = (x * (1 - y) + a * z) * dt;
-  const dy = (b * (x * x - 1) * y) * dt;
-  const dz = (x - c * z) * dt;
-  return [dx, dy, dz];
+  out[0] = (x * (1 - y) + a * z) * dt;
+  out[1] = (b * (x * x - 1) * y) * dt;
+  out[2] = (x - c * z) * dt;
 };

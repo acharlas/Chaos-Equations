@@ -36,8 +36,8 @@ const DadrasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e });
+  const equation = (x, y, z, dtLocal, out) => {
+    DadrasEquation(x, y, z, dtLocal, { a, b, c, d, e }, out);
   };
 
   return (

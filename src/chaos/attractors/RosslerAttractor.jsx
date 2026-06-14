@@ -34,8 +34,8 @@ const RosslerAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return RosslerEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    RosslerEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (

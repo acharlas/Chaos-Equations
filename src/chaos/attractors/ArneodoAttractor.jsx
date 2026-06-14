@@ -34,8 +34,8 @@ const ArneodoAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ArneodoEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    ArneodoEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (

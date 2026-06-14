@@ -32,8 +32,8 @@ const SprottAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return SprottEquation(x, y, z, dtLocal, { a });
+  const equation = (x, y, z, dtLocal, out) => {
+    SprottEquation(x, y, z, dtLocal, { a }, out);
   };
 
   return (

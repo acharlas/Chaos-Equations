@@ -36,8 +36,8 @@ const ChenLeeAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChenLeeEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    ChenLeeEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (

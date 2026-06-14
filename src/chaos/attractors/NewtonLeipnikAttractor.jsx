@@ -33,8 +33,8 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return NewtonLeipnikEquation(x, y, z, dtLocal, { a, b });
+  const equation = (x, y, z, dtLocal, out) => {
+    NewtonLeipnikEquation(x, y, z, dtLocal, { a, b }, out);
   };
 
   return (

@@ -1,7 +1,6 @@
-export const RosslerEquation = (x, y, z, dt, params) => {
+export const RosslerEquation = (x, y, z, dt, params, out) => {
   const { a, b, c } = params;
-  const dx = (-y - z) * dt;
-  const dy = (x + a * y) * dt;
-  const dz = (b + z * (x - c)) * dt;
-  return [dx, dy, dz];
+  out[0] = (-y - z) * dt;
+  out[1] = (x + a * y) * dt;
+  out[2] = (b + z * (x - c)) * dt;
 };

@@ -33,8 +33,8 @@ const BurkeShawAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BurkeShawEquation(x, y, z, dtLocal, { a, b });
+  const equation = (x, y, z, dtLocal, out) => {
+    BurkeShawEquation(x, y, z, dtLocal, { a, b }, out);
   };
 
   return (

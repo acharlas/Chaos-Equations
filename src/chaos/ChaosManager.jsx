@@ -67,6 +67,7 @@ const ChaosManager = ({
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
   const lastClampWarningRef = useRef("");
+  const eqOutRef = useRef(new Float32Array(3));
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -329,6 +330,7 @@ const ChaosManager = ({
           position = particle.step(
             currentWriteIndex,
             s === steps - 1,
+            eqOutRef.current,
             dtStep
           );
         }

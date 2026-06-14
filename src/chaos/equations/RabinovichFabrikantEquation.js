@@ -1,7 +1,6 @@
-export const RabinovichFabrikantEquation = (x, y, z, dt, params) => {
+export const RabinovichFabrikantEquation = (x, y, z, dt, params, out) => {
   const { alpha, gamma } = params;
-  const dx = (y * (z - 1 + x * x) + gamma * x) * dt;
-  const dy = (x * (3 * z + 1 - x * x) + gamma * y) * dt;
-  const dz = (-2 * z * (alpha + x * y)) * dt;
-  return [dx, dy, dz];
+  out[0] = (y * (z - 1 + x * x) + gamma * x) * dt;
+  out[1] = (x * (3 * z + 1 - x * x) + gamma * y) * dt;
+  out[2] = -2 * z * (alpha + x * y) * dt;
 };

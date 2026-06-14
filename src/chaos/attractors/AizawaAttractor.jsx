@@ -37,8 +37,8 @@ const AizawaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f });
+  const equation = (x, y, z, dtLocal, out) => {
+    AizawaEquation(x, y, z, dtLocal, { a, b, c, d, e, f }, out);
   };
 
   return (

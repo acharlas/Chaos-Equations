@@ -127,18 +127,15 @@ const ATTRACTOR_DEFAULTS = {
 
 function runAttractor(eq, params, start, steps, dt) {
   let [x, y, z] = start;
+  const out = new Float32Array(3);
   for (let i = 0; i < steps; i++) {
-    const out = eq(x, y, z, dt, params);
-    if (out.length !== 3) {
-      throw new Error(`Equation returned ${out.length} components, expected 3`);
+    eq(x, y, z, dt, params, out);
+    if (!Number.isFinite(out[0]) || !Number.isFinite(out[1]) || !Number.isFinite(out[2])) {
+      throw new Error(`Non-finite delta at step ${i}: ${[out[0], out[1], out[2]]}`);
     }
-    const [dx, dy, dz] = out;
-    if (!Number.isFinite(dx) || !Number.isFinite(dy) || !Number.isFinite(dz)) {
-      throw new Error(`Non-finite delta at step ${i}: ${[dx, dy, dz]}`);
-    }
-    x += dx;
-    y += dy;
-    z += dz;
+    x += out[0];
+    y += out[1];
+    z += out[2];
   }
   return [x, y, z];
 }
@@ -147,10 +144,15 @@ describe("chaos equations", () => {
   for (const [name, { eq, params, start, bound }] of Object.entries(
     ATTRACTOR_DEFAULTS,
   )) {
-    it(`${name} returns 3 finite components at default parameters`, () => {
-      const out = eq(0.1, 0, 0, DT, params);
-      expect(out).toHaveLength(3);
-      for (const v of out) expect(Number.isFinite(v)).toBe(true);
+    it(`${name} writes 3 finite components to out at default parameters`, () => {
+      const out = new Float32Array(3);
+      eq(0.1, 0, 0, DT, params, out);
+      expect(out[0]).toBeTypeOf("number");
+      expect(out[1]).toBeTypeOf("number");
+      expect(out[2]).toBeTypeOf("number");
+      expect(Number.isFinite(out[0])).toBe(true);
+      expect(Number.isFinite(out[1])).toBe(true);
+      expect(Number.isFinite(out[2])).toBe(true);
     });
 
     it(`${name} stays bounded after ${STEPS} steps at default parameters`, () => {
@@ -172,28 +174,17 @@ describe("chaos equations", () => {
 });
 
 describe("Lorenz regression — known trajectory", () => {
-  // Pin down the first 50 steps of Lorenz from the default start with the
-  // default parameters and a small dt. If a refactor of the integration loop
-  // changes anything (different substep ordering, different equation signature,
-  // different dt application), this test will fail. Updates only on purpose.
   it("matches the pinned trajectory", () => {
     let [x, y, z] = [0.1, 0, 0];
-    const pinned = [];
+    const out = new Float32Array(3);
     for (let i = 0; i < 50; i++) {
-      const [dx, dy, dz] = LorenzEquation(x, y, z, DT, {
-        a: 10,
-        b: 28,
-        c: 2.67,
-      });
-      x += dx;
-      y += dy;
-      z += dz;
-      pinned.push([x, y, z]);
+      LorenzEquation(x, y, z, DT, { a: 10, b: 28, c: 2.67 }, out);
+      x += out[0];
+      y += out[1];
+      z += out[2];
     }
-    // Hash the final step tightly so any small divergence trips the test.
-    const final = pinned[pinned.length - 1];
-    expect(final[0]).toBeCloseTo(-1.7343800535092093, 8);
-    expect(final[1]).toBeCloseTo(0.8838898032359346, 8);
-    expect(final[2]).toBeCloseTo(-3.0528380994475044, 8);
+    expect(x).toBeCloseTo(-1.7343800604343413, 8);
+    expect(y).toBeCloseTo(0.883889801800251, 8);
+    expect(z).toBeCloseTo(-3.0528380908071995, 8);
   });
 });

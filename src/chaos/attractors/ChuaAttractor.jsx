@@ -47,8 +47,8 @@ const ChuaAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ChuaEquation(x, y, z, dtLocal, params);
+  const equation = (x, y, z, dtLocal, out) => {
+    ChuaEquation(x, y, z, dtLocal, params, out);
   };
 
   return (

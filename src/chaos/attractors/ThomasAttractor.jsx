@@ -32,8 +32,8 @@ const ThomasAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return ThomasEquation(x, y, z, dtLocal, { b });
+  const equation = (x, y, z, dtLocal, out) => {
+    ThomasEquation(x, y, z, dtLocal, { b }, out);
   };
 
   return (

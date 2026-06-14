@@ -97,30 +97,30 @@ const ParticleState = forwardRef(({
     }
   }, [restartTrigger, initialPosition, trailLength, particleIndex, totalParticles]);
 
-  const step = useCallback((writeIndex, writeTrail = true, dtOverride) => {
+  const step = useCallback((writeIndex, writeTrail, eqOut, dtOverride) => {
     if (freezeRef.current) return positionRef.current;
     const currentTrailLength = trailLengthRef.current;
     if (currentTrailLength <= 0) return positionRef.current;
     const pos = positionRef.current;
     const dtLocal =
       typeof dtOverride === "number" ? dtOverride : dtRef.current;
-    const [dx, dy, dz, dw] = equationRef.current(
+    equationRef.current(
       pos.x,
       pos.y,
       pos.z,
       dtLocal,
-      wRef.current
+      wRef.current,
+      eqOut,
     );
-    // dx/dy/dz are deltas (already multiplied by dt), so divide by dt for speed.
+    const dx = eqOut[0];
+    const dy = eqOut[1];
+    const dz = eqOut[2];
     speedRef.current =
       dtLocal !== 0 ? Math.hypot(dx, dy, dz) / dtLocal : 0;
     const newX = pos.x + dx;
     const newY = pos.y + dy;
     const newZ = pos.z + dz;
     pos.set(newX, newY, newZ);
-    if (typeof dw === "number") {
-      wRef.current += dw;
-    }
 
     if (writeTrail) {
       const targetRef = trailTargetRef.current;

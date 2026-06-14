@@ -34,8 +34,8 @@ const BoualiAttractor = ({ sharedParams }) => {
     [highSpeedHex]
   );
 
-  const equation = (x, y, z, dtLocal) => {
-    return BoualiEquation(x, y, z, dtLocal, { a, b, c });
+  const equation = (x, y, z, dtLocal, out) => {
+    BoualiEquation(x, y, z, dtLocal, { a, b, c }, out);
   };
 
   return (
