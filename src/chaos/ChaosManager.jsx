@@ -1,34 +1,13 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import ParticleState from "./ParticleState";
+import { computePercentileRange } from "./autoSpeedRange.js";
 
 const NUMBER_FORMATTER = new Intl.NumberFormat(undefined);
-const AUTO_SPEED_LOW_PERCENTILE = 10;
-const AUTO_SPEED_HIGH_PERCENTILE = 90;
 const AUTO_SPEED_SMOOTHING = 0.15;
-// Performance policy: update speed range every N frames and sample up to M particles.
 const SPEED_RANGE_UPDATE_INTERVAL = 10;
 const MAX_SPEED_SAMPLES = 2000;
-const DEFAULT_MAX_TRAIL_POINTS = 300000; // Performance budget: Npoints * trailLength.
-const computePercentileRange = (values) => {
-  if (!values || values.length === 0) return null;
-  values.sort((a, b) => a - b);
-  const clampedLow = Math.min(
-    AUTO_SPEED_LOW_PERCENTILE,
-    AUTO_SPEED_HIGH_PERCENTILE - 1
-  );
-  const clampedHigh = Math.max(
-    AUTO_SPEED_HIGH_PERCENTILE,
-    AUTO_SPEED_LOW_PERCENTILE + 1
-  );
-  const lowPct = Math.max(0, Math.min(100, clampedLow)) / 100;
-  const highPct = Math.max(0, Math.min(100, clampedHigh)) / 100;
-  const last = values.length - 1;
-  const lowIndex = Math.max(0, Math.floor(last * lowPct));
-  const highIndex = Math.max(0, Math.floor(last * highPct));
-  return { min: values[lowIndex], max: values[highIndex] };
-};
+const DEFAULT_MAX_TRAIL_POINTS = 300000;
 
 const ChaosManager = ({
   sharedParams,
@@ -48,7 +27,7 @@ const ChaosManager = ({
   const substeps = sharedParams?.substeps ?? 1;
   const speedContrast = sharedParams?.speedContrast ?? 0.5;
   const maxTrailPoints = sharedParams?.maxTrailPoints ?? DEFAULT_MAX_TRAIL_POINTS;
-  const particleRefs = useRef([]);
+
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
   const trailsGeometryRef = useRef(new THREE.BufferGeometry());
@@ -60,7 +39,6 @@ const ChaosManager = ({
   const trailIndexAttrRef = useRef(null);
   const breakSegmentsRef = useRef([]);
   const globalWriteIndexRef = useRef(0);
-  const speedSamplesRef = useRef(new Float32Array(0));
   const speedListRef = useRef([]);
   const frameCountRef = useRef(0);
   const autoSpeedMinRef = useRef(0);
@@ -72,6 +50,20 @@ const ChaosManager = ({
   const drRef = useRef(0);
   const dgRef = useRef(0);
   const dbRef = useRef(0);
+  const equationRef = useRef(equation);
+
+  const posXRef = useRef(new Float32Array(0));
+  const posYRef = useRef(new Float32Array(0));
+  const posZRef = useRef(new Float32Array(0));
+  const speedRef = useRef(new Float32Array(0));
+  const initPosXRef = useRef(new Float32Array(0));
+  const initPosYRef = useRef(new Float32Array(0));
+  const initPosZRef = useRef(new Float32Array(0));
+
+  useEffect(() => {
+    equationRef.current = equation;
+  }, [equation]);
+
   const supportsUint32Indices = useMemo(() => {
     if (!gl) return true;
     return (
@@ -87,7 +79,7 @@ const ChaosManager = ({
 
   const budgetTrailLength = useMemo(
     () => Math.min(trailLength, budgetCap),
-    [trailLength, budgetCap]
+    [trailLength, budgetCap],
   );
 
   const renderTrailLength = useMemo(() => {
@@ -118,7 +110,7 @@ const ChaosManager = ({
         ? `, budget cap ${NUMBER_FORMATTER.format(budgetCap)} (requested ${NUMBER_FORMATTER.format(requestedPoints)})`
         : "";
     console.warn(
-      `Trail length clamped to ${renderTrailLength} (requested ${trailLength}${budgetInfo})${clampReasonText}.`
+      `Trail length clamped to ${renderTrailLength} (requested ${trailLength}${budgetInfo})${clampReasonText}.`,
     );
   }, [
     budgetCap,
@@ -129,35 +121,57 @@ const ChaosManager = ({
     trailLength,
   ]);
 
-  const initialPositions = useMemo(() => {
-    const positions = [];
-    for (let i = 0; i < Npoints; i++) {
-      positions.push([
-        Math.random() * 2 - 1,
-        Math.random() * 2 - 1,
-        Math.random() * 2 - 1,
-      ]);
-    }
-    return positions;
-  }, [Npoints]);
-
   useEffect(() => {
-    particleRefs.current = particleRefs.current.slice(0, Npoints);
-    breakSegmentsRef.current = new Array(Npoints).fill(-1);
-    speedSamplesRef.current = new Float32Array(Npoints);
+    const N = Npoints;
+    const posX = new Float32Array(N);
+    const posY = new Float32Array(N);
+    const posZ = new Float32Array(N);
+    const initX = new Float32Array(N);
+    const initY = new Float32Array(N);
+    const initZ = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = Math.random() * 2 - 1;
+      const y = Math.random() * 2 - 1;
+      const z = Math.random() * 2 - 1;
+      posX[i] = x;
+      posY[i] = y;
+      posZ[i] = z;
+      initX[i] = x;
+      initY[i] = y;
+      initZ[i] = z;
+    }
+    posXRef.current = posX;
+    posYRef.current = posY;
+    posZRef.current = posZ;
+    initPosXRef.current = initX;
+    initPosYRef.current = initY;
+    initPosZRef.current = initZ;
+    speedRef.current = new Float32Array(N);
+    breakSegmentsRef.current = new Array(N).fill(-1);
     autoRangeInitializedRef.current = false;
   }, [Npoints]);
 
   useEffect(() => {
-    const speeds = trailSpeedsRef.current;
-    if (speeds && speeds.length > 0) {
-      speeds.fill(0);
+    const N = posXRef.current.length;
+    if (N === 0) return;
+    const ix = initPosXRef.current;
+    const iy = initPosYRef.current;
+    const iz = initPosZRef.current;
+    const cx = posXRef.current;
+    const cy = posYRef.current;
+    const cz = posZRef.current;
+    for (let i = 0; i < N; i++) {
+      cx[i] = ix[i];
+      cy[i] = iy[i];
+      cz[i] = iz[i];
     }
+    const speeds = trailSpeedsRef.current;
+    if (speeds && speeds.length > 0) speeds.fill(0);
+    autoRangeInitializedRef.current = false;
   }, [restartTrigger, renderTrailLength, Npoints]);
 
   useEffect(() => {
     globalWriteIndexRef.current = renderTrailLength > 1 ? 1 : 0;
-    // reset global write index when trail length changes or restarts
   }, [renderTrailLength, restartTrigger, Npoints]);
 
   useEffect(() => {
@@ -181,6 +195,23 @@ const ChaosManager = ({
     const positions = new Float32Array(totalPoints * 3);
     const colors = new Float32Array(totalPoints * 3);
     const speeds = new Float32Array(totalPoints);
+
+    const initX = initPosXRef.current;
+    const initY = initPosYRef.current;
+    const initZ = initPosZRef.current;
+    if (initX.length === Npoints && renderTrailLength > 0) {
+      for (let p = 0; p < Npoints; p++) {
+        const x = initX[p];
+        const y = initY[p];
+        const z = initZ[p];
+        for (let i = 0; i < renderTrailLength; i++) {
+          const base = (i * Npoints + p) * 3;
+          positions[base] = x;
+          positions[base + 1] = y;
+          positions[base + 2] = z;
+        }
+      }
+    }
 
     trailPositionsRef.current = positions;
     trailColorsRef.current = colors;
@@ -253,10 +284,9 @@ const ChaosManager = ({
     if (!colorAttr || colors.length === 0) return;
 
     const lowCol = lowSpeedColor;
-    const highCol = highSpeedColor;
-    const dr = highCol.r - lowCol.r;
-    const dg = highCol.g - lowCol.g;
-    const db = highCol.b - lowCol.b;
+    const dr = drRef.current;
+    const dg = dgRef.current;
+    const db = dbRef.current;
     const speeds = trailSpeedsRef.current;
     let rangeMin = autoRangeInitializedRef.current ? autoSpeedMinRef.current : 0;
     let rangeMax = autoRangeInitializedRef.current ? autoSpeedMaxRef.current : 1;
@@ -279,14 +309,14 @@ const ChaosManager = ({
     const speedRange = Math.max(1e-6, rangeMax - rangeMin);
     const gamma = Math.max(
       1e-3,
-      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4)
+      Math.pow(2, (Math.min(1, Math.max(0, speedContrast)) - 0.5) * 4),
     );
 
     if (speeds.length * 3 === colors.length) {
       for (let i = 0; i < speeds.length; i++) {
         const tRaw = Math.min(
           1,
-          Math.max(0, (speeds[i] - rangeMin) / speedRange)
+          Math.max(0, (speeds[i] - rangeMin) / speedRange),
         );
         const t = gamma === 1 ? tRaw : Math.pow(tRaw, gamma);
         const offset = i * 3;
@@ -307,219 +337,187 @@ const ChaosManager = ({
 
   useFrame(() => {
     if (freeze) return;
-    const refs = particleRefs.current;
+    const N = Npoints;
+    if (N === 0) return;
+    const posX = posXRef.current;
+    const posY = posYRef.current;
+    const posZ = posZRef.current;
+    if (posX.length !== N) return;
+    const eqOut = eqOutRef.current;
+    const eqFn = equationRef.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
     const colorAttr = trailColorAttrRef.current;
     const colors = trailColorsRef.current;
     const trailSpeeds = trailSpeedsRef.current;
     const indexAttr = trailIndexAttrRef.current;
-    const steps = Math.max(1, substeps);
+    const indexArray = indexAttr ? indexAttr.array : null;
+    const steps = substeps > 0 ? substeps : 1;
     const dtStep = dt / steps;
     const breakSegments = breakSegmentsRef.current;
-    const speedSamples = speedSamplesRef.current;
+    const speedSamples = speedRef.current;
     const speedList = speedListRef.current;
+    const speedContrastVal = gammaRef.current;
     const shouldUpdateRange =
       frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
     frameCountRef.current += 1;
     const sampleStride = shouldUpdateRange
-      ? Math.max(1, Math.floor(refs.length / MAX_SPEED_SAMPLES))
-      : 0;
+      ? Math.max(1, Math.floor(N / MAX_SPEED_SAMPLES))
+      : 1;
     const lowCol = lowSpeedColor;
     const dr = drRef.current;
     const dg = dgRef.current;
     const db = dbRef.current;
+    const lowColR = lowCol.r;
+    const lowColG = lowCol.g;
+    const lowColB = lowCol.b;
     const currentWriteIndex =
       renderTrailLength > 0 ? globalWriteIndexRef.current : -1;
     const nextWriteIndex =
       renderTrailLength > 0
         ? (currentWriteIndex + 1) % renderTrailLength
         : -1;
-    let minIndexUpdate = null;
-    let maxIndexUpdate = null;
+    const lastIndex =
+      nextWriteIndex === 0 ? renderTrailLength - 1 : nextWriteIndex - 1;
+    const hasIndexBreak =
+      indexAttr !== null && renderTrailLength > 1 && nextWriteIndex >= 0;
+    const hasColorUpdate = colorAttr !== null && colors.length > 0;
+    const baseLastPointIndex = lastIndex * N;
+    const baseLastPointOffset = baseLastPointIndex * 3;
+    const baseTrailHeadOffset =
+      nextWriteIndex >= 0 ? nextWriteIndex * N * 3 : -1;
     speedList.length = 0;
-    for (let i = 0; i < refs.length; i++) {
-      const particle = refs[i];
-      let position = null;
-      if (particle?.step) {
-        for (let s = 0; s < steps; s++) {
-          position = particle.step(
-            currentWriteIndex,
-            s === steps - 1,
-            eqOutRef.current,
-            dtStep
-          );
-        }
+    let minIndexUpdate = Infinity;
+    let maxIndexUpdate = -Infinity;
+    for (let i = 0; i < N; i++) {
+      let x = posX[i];
+      let y = posY[i];
+      let z = posZ[i];
+      for (let s = 0; s < steps; s++) {
+        eqFn(x, y, z, dtStep, eqOut);
+        const dx = eqOut[0];
+        const dy = eqOut[1];
+        const dz = eqOut[2];
+        x += dx;
+        y += dy;
+        z += dz;
       }
-      if (mesh && position) {
+      posX[i] = x;
+      posY[i] = y;
+      posZ[i] = z;
+      const dx = eqOut[0];
+      const dy = eqOut[1];
+      const dz = eqOut[2];
+      const speedSq = dx * dx + dy * dy + dz * dz;
+      const speed = dtStep !== 0 ? Math.sqrt(speedSq) / dtStep : 0;
+      speedSamples[i] = speed;
+      if (shouldUpdateRange && Number.isFinite(speed) && i % sampleStride === 0) {
+        speedList.push(speed);
+      }
+      if (mesh) {
         tempMatrix.current.identity();
-        tempMatrix.current.setPosition(position);
+        tempMatrix.current.setPosition(x, y, z);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      let speed = 0;
-      let rawSpeed = 0;
-      if (particle?.getSpeed) {
-        rawSpeed = particle.getSpeed();
-        speed = Number.isFinite(rawSpeed) ? rawSpeed : 0;
+      if (baseTrailHeadOffset >= 0) {
+        const headOffset = baseTrailHeadOffset + i * 3;
+        trailPositionsRef.current[headOffset] = x;
+        trailPositionsRef.current[headOffset + 1] = y;
+        trailPositionsRef.current[headOffset + 2] = z;
       }
-      speedSamples[i] = speed;
-      if (
-        shouldUpdateRange &&
-        nextWriteIndex >= 0 &&
-        Number.isFinite(rawSpeed) &&
-        i % sampleStride === 0
-      ) {
-        speedList.push(rawSpeed);
+      if (hasColorUpdate) {
+        const colorOffset = baseLastPointOffset + i * 3;
+        const rawT = (speed - autoSpeedMinRef.current) /
+          Math.max(1e-6, autoSpeedMaxRef.current - autoSpeedMinRef.current);
+        const tClamp = rawT < 0 ? 0 : rawT > 1 ? 1 : rawT;
+        const t = speedContrastVal === 1 ? tClamp : Math.pow(tClamp, speedContrastVal);
+        colors[colorOffset] = lowColR + dr * t;
+        colors[colorOffset + 1] = lowColG + dg * t;
+        colors[colorOffset + 2] = lowColB + db * t;
       }
-      if (indexAttr && renderTrailLength > 1 && nextWriteIndex >= 0) {
+      const speedPointIndex = baseLastPointIndex + i;
+      if (speedPointIndex < trailSpeeds.length) {
+        trailSpeeds[speedPointIndex] = speed;
+      }
+      if (hasIndexBreak && indexArray) {
         const nextBreak =
-          renderTrailLength > 1
-            ? (nextWriteIndex - 1 + renderTrailLength) % renderTrailLength
-            : -1;
+          (nextWriteIndex - 1 + renderTrailLength) % renderTrailLength;
         const prevBreak = breakSegments[i] ?? -1;
         if (prevBreak !== nextBreak) {
           const baseSegmentOffset = i * renderTrailLength * 2;
-          const indexArray = indexAttr.array;
           if (prevBreak >= 0) {
             const restoreOffset = baseSegmentOffset + prevBreak * 2;
-            indexArray[restoreOffset] = prevBreak * Npoints + i;
+            indexArray[restoreOffset] = prevBreak * N + i;
             indexArray[restoreOffset + 1] =
-              ((prevBreak + 1) % renderTrailLength) * Npoints + i;
-            minIndexUpdate =
-              minIndexUpdate === null
-                ? restoreOffset
-                : Math.min(minIndexUpdate, restoreOffset);
-            maxIndexUpdate =
-              maxIndexUpdate === null
-                ? restoreOffset + 1
-                : Math.max(maxIndexUpdate, restoreOffset + 1);
+              ((prevBreak + 1) % renderTrailLength) * N + i;
+            if (restoreOffset < minIndexUpdate) minIndexUpdate = restoreOffset;
+            const restoreEnd = restoreOffset + 1;
+            if (restoreEnd > maxIndexUpdate) maxIndexUpdate = restoreEnd;
           }
           if (nextBreak >= 0) {
             const breakOffset = baseSegmentOffset + nextBreak * 2;
-            const v = nextBreak * Npoints + i;
+            const v = nextBreak * N + i;
             indexArray[breakOffset] = v;
             indexArray[breakOffset + 1] = v;
-            minIndexUpdate =
-              minIndexUpdate === null
-                ? breakOffset
-                : Math.min(minIndexUpdate, breakOffset);
-            maxIndexUpdate =
-              maxIndexUpdate === null
-                ? breakOffset + 1
-                : Math.max(maxIndexUpdate, breakOffset + 1);
+            if (breakOffset < minIndexUpdate) minIndexUpdate = breakOffset;
+            const breakEnd = breakOffset + 1;
+            if (breakEnd > maxIndexUpdate) maxIndexUpdate = breakEnd;
           }
           breakSegments[i] = nextBreak;
         }
       }
     }
-    if (nextWriteIndex >= 0) {
-      globalWriteIndexRef.current = nextWriteIndex;
-    }
-    let rangeMin = autoRangeInitializedRef.current
-      ? autoSpeedMinRef.current
-      : 0;
-    let rangeMax = autoRangeInitializedRef.current
-      ? autoSpeedMaxRef.current
-      : 1;
-    if (shouldUpdateRange && speedList.length > 0) {
-      const range = computePercentileRange(speedList);
-      const frameMin = range?.min;
-      const frameMax = range?.max;
-      if (frameMin === undefined || frameMax === undefined) {
-        // keep prior range
-      } else {
-      const alpha = Math.min(1, Math.max(0, AUTO_SPEED_SMOOTHING));
-      if (!autoRangeInitializedRef.current) {
-        autoSpeedMinRef.current = frameMin;
-        autoSpeedMaxRef.current = frameMax;
-        autoRangeInitializedRef.current = true;
-      } else {
-        autoSpeedMinRef.current += (frameMin - autoSpeedMinRef.current) * alpha;
-        autoSpeedMaxRef.current += (frameMax - autoSpeedMaxRef.current) * alpha;
-      }
-      if (autoSpeedMaxRef.current <= autoSpeedMinRef.current + 1e-6) {
-        autoSpeedMaxRef.current = autoSpeedMinRef.current + 1e-6;
-      }
-      rangeMin = autoSpeedMinRef.current;
-      rangeMax = autoSpeedMaxRef.current;
-      }
-    }
-    if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax)) {
-      rangeMin = 0;
-      rangeMax = 1;
-      autoRangeInitializedRef.current = false;
-    }
-    const speedRange = Math.max(1e-6, rangeMax - rangeMin);
-    const gamma = gammaRef.current;
-    let minColorUpdate = null;
-    let maxColorUpdate = null;
-    let minPositionUpdate = null;
-    let maxPositionUpdate = null;
-    if (renderTrailLength > 0) {
-      for (let i = 0; i < refs.length; i++) {
-        if (nextWriteIndex < 0) continue;
-        const lastIndex =
-          nextWriteIndex === 0 ? renderTrailLength - 1 : nextWriteIndex - 1;
-        const pointIndex = lastIndex * Npoints + i;
-        const offset = pointIndex * 3;
-        const speed = speedSamples[i];
-        if (pointIndex < trailSpeeds.length) {
-          trailSpeeds[pointIndex] = speed;
-        }
-        if (colorAttr && colors.length > 0) {
-          const tRaw = Math.min(
-            1,
-            Math.max(0, (speed - rangeMin) / speedRange)
-          );
-          const t = gamma === 1 ? tRaw : Math.pow(tRaw, gamma);
-          colors[offset] = lowCol.r + dr * t;
-          colors[offset + 1] = lowCol.g + dg * t;
-          colors[offset + 2] = lowCol.b + db * t;
-          minColorUpdate =
-            minColorUpdate === null
-              ? offset
-              : Math.min(minColorUpdate, offset);
-          maxColorUpdate =
-            maxColorUpdate === null
-              ? offset + 2
-              : Math.max(maxColorUpdate, offset + 2);
-        }
-        minPositionUpdate =
-          minPositionUpdate === null
-            ? offset
-            : Math.min(minPositionUpdate, offset);
-        maxPositionUpdate =
-          maxPositionUpdate === null
-            ? offset + 2
-            : Math.max(maxPositionUpdate, offset + 2);
-      }
-    }
     if (mesh) {
       mesh.instanceMatrix.needsUpdate = true;
     }
-    if (positionAttr && minPositionUpdate !== null) {
+    if (nextWriteIndex >= 0) {
+      globalWriteIndexRef.current = nextWriteIndex;
+    }
+    if (shouldUpdateRange && speedList.length > 0) {
+      const range = computePercentileRange(speedList);
+      if (range) {
+        if (!autoRangeInitializedRef.current) {
+          autoSpeedMinRef.current = range.min;
+          autoSpeedMaxRef.current = range.max;
+          autoRangeInitializedRef.current = true;
+        } else {
+          autoSpeedMinRef.current +=
+            (range.min - autoSpeedMinRef.current) * AUTO_SPEED_SMOOTHING;
+          autoSpeedMaxRef.current +=
+            (range.max - autoSpeedMaxRef.current) * AUTO_SPEED_SMOOTHING;
+        }
+        if (autoSpeedMaxRef.current <= autoSpeedMinRef.current + 1e-6) {
+          autoSpeedMaxRef.current = autoSpeedMinRef.current + 1e-6;
+        }
+      }
+    } else if (!autoRangeInitializedRef.current) {
+      autoSpeedMinRef.current = 0;
+      autoSpeedMaxRef.current = 1;
+    }
+    if (positionAttr && baseTrailHeadOffset >= 0) {
+      const updateEnd = baseTrailHeadOffset + (N - 1) * 3 + 3;
       if (!positionAttr.updateRange) {
         positionAttr.updateRange = { offset: 0, count: -1 };
       }
-      positionAttr.updateRange.offset = minPositionUpdate;
-      positionAttr.updateRange.count =
-        maxPositionUpdate - minPositionUpdate + 1;
+      positionAttr.updateRange.offset = baseTrailHeadOffset;
+      positionAttr.updateRange.count = updateEnd - baseTrailHeadOffset;
       positionAttr.needsUpdate = true;
     }
-    if (indexAttr && minIndexUpdate !== null) {
+    if (indexAttr && minIndexUpdate !== Infinity) {
       if (!indexAttr.updateRange) {
         indexAttr.updateRange = { offset: 0, count: -1 };
       }
       indexAttr.updateRange.offset = minIndexUpdate;
-      indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate + 1;
+      indexAttr.updateRange.count = maxIndexUpdate - minIndexUpdate;
       indexAttr.needsUpdate = true;
     }
-    if (colorAttr && minColorUpdate !== null) {
+    if (colorAttr && hasColorUpdate) {
+      const updateEnd = baseLastPointOffset + (N - 1) * 3 + 3;
       if (!colorAttr.updateRange) {
         colorAttr.updateRange = { offset: 0, count: -1 };
       }
-      colorAttr.updateRange.offset = minColorUpdate;
-      colorAttr.updateRange.count = maxColorUpdate - minColorUpdate + 1;
+      colorAttr.updateRange.offset = baseLastPointOffset;
+      colorAttr.updateRange.count = updateEnd - baseLastPointOffset;
       colorAttr.needsUpdate = true;
     }
   });
@@ -543,23 +541,6 @@ const ChaosManager = ({
       <lineSegments geometry={trailsGeometryRef.current} frustumCulled={false}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
-      {initialPositions.map((pos, idx) => (
-        <ParticleState
-          key={idx}
-          ref={(ref) => {
-            particleRefs.current[idx] = ref;
-          }}
-          initialPosition={pos}
-          dt={dt}
-          trailTarget={trailPositionsRef}
-          trailLength={renderTrailLength}
-          particleIndex={idx}
-          totalParticles={Npoints}
-          equation={equation}
-          freeze={freeze}
-          restartTrigger={restartTrigger}
-        />
-      ))}
     </>
   );
 };

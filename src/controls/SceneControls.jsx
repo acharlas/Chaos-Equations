@@ -6,14 +6,14 @@ export const getSceneControls = () => ({
       Npoints: {
         value: 200,
         min: 1,
-        max: 600,
+        max: 15000,
         step: 1,
         label: "Particles",
       },
       trailLength: {
         value: 200,
         min: 100,
-        max: 500,
+        max: 1600,
         step: 10,
         label: "Trail Length",
       },
