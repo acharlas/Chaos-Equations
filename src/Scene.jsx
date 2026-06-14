@@ -34,20 +34,23 @@ const Scene = () => {
   const {
     Npoints,
     trailLength,
+    timeScale,
     lowSpeedHex,
     highSpeedHex,
     globalScale,
-    dt,
-    substeps,
     bloom,
     bloom_threshold,
     bloom_strength,
     bloom_radius,
   } = Scene;
 
+  const SUBSTEPS = 2;
+  const BASE_DT = 0.003;
+  const dt = BASE_DT * timeScale;
+
   const sharedParams = {
     dt,
-    substeps,
+    substeps: SUBSTEPS,
     Npoints,
     trailLength,
     lowSpeedHex,
