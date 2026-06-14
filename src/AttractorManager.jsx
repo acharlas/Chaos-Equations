@@ -27,11 +27,7 @@ const ATTRACTORS = [
   { id: "Dadras", label: "Dadras", component: DadrasAttractor },
   { id: "Sprott", label: "Sprott", component: SprottAttractor },
   { id: "Bouali", label: "Bouali", component: BoualiAttractor },
-  {
-    id: "BurkeShaw",
-    label: "Burke-Shaw",
-    component: BurkeShawAttractor,
-  },
+  { id: "BurkeShaw", label: "Burke-Shaw", component: BurkeShawAttractor },
   {
     id: "NewtonLeipnik",
     label: "Newton-Leipnik",
@@ -46,9 +42,29 @@ const ATTRACTORS = [
   },
 ];
 
-const ATTRACTOR_BY_ID = Object.fromEntries(
-  ATTRACTORS.map((a) => [a.id, a]),
-);
+const ATTRACTOR_BY_ID = Object.fromEntries(ATTRACTORS.map((a) => [a.id, a]));
+
+const ATTRACTOR_GROUPS = [
+  {
+    label: "Classic",
+    ids: ["Lorenz", "Halvorsen", "Rossler", "Thomas", "Sprott"],
+  },
+  {
+    label: "Polynomial",
+    ids: [
+      "Aizawa",
+      "Bouali",
+      "ChenLee",
+      "BurkeShaw",
+      "Dadras",
+      "RabinovichFabrikant",
+    ],
+  },
+  {
+    label: "Other",
+    ids: ["Chua", "NewtonLeipnik", "NoseHoover", "Arneodo"],
+  },
+];
 
 const SPACING = 200;
 
@@ -68,22 +84,38 @@ const computeGridPositions = (count) => {
   return positions;
 };
 
+const buildAttractorsSchema = () => {
+  const schema = {};
+  ATTRACTOR_GROUPS.forEach((group) => {
+    const groupObj = {};
+    group.ids.forEach((id) => {
+      const meta = ATTRACTOR_BY_ID[id];
+      groupObj[id] = { value: id === "Halvorsen", label: meta.label };
+    });
+    schema[group.label] = folder(groupObj, { collapsed: true });
+  });
+  return schema;
+};
+
 const AttractorManager = ({ sharedParams }) => {
-  const defaults = Object.fromEntries(
-    ATTRACTORS.map(({ id, label }) => [
-      id,
-      { value: id === "Halvorsen", label },
-    ]),
-  );
   const selections = useControls({
-    Attractors: folder(defaults, { collapsed: false, order: -10 }),
+    Attractors: folder(buildAttractorsSchema(), {
+      collapsed: false,
+      order: -10,
+    }),
   });
 
-  const selected = useMemo(
-    () =>
-      ATTRACTORS.filter(({ id }) => selections[id]).map((a) => a.id),
-    [selections],
-  );
+  const selected = useMemo(() => {
+    const out = [];
+    ATTRACTOR_GROUPS.forEach((group) => {
+      const groupVals = selections?.[group.label] ?? {};
+      group.ids.forEach((id) => {
+        if (groupVals[id]) out.push(id);
+      });
+    });
+    return out;
+  }, [selections]);
+
   const positions = useMemo(
     () => computeGridPositions(selected.length),
     [selected.length],
