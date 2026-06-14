@@ -4,14 +4,14 @@ export const getSceneControls = () => ({
   Simulation: folder(
     {
       Npoints: {
-        value: 200,
+        value: 600,
         min: 1,
         max: 15000,
         step: 1,
         label: "Particles",
       },
       trailLength: {
-        value: 200,
+        value: 600,
         min: 100,
         max: 1600,
         step: 10,
