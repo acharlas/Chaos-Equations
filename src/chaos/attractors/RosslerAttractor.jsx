@@ -16,7 +16,7 @@ const RosslerAttractor = ({ sharedParams, position }) => {
         b: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
         c: { value: 5.7, min: 2, max: 10, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

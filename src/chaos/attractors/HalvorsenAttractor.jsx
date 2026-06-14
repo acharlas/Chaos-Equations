@@ -14,7 +14,7 @@ const HalvorsenAttractor = ({ sharedParams, position }) => {
       {
         a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

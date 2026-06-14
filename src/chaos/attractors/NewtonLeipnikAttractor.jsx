@@ -15,7 +15,7 @@ const NewtonLeipnikAttractor = ({ sharedParams, position }) => {
         a: { value: 0.4, min: 0, max: 1, step: 0.01 },
         b: { value: 0.175, min: 0, max: 0.5, step: 0.001 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

@@ -19,7 +19,7 @@ const ChuaAttractor = ({ sharedParams, position }) => {
         qParam: { value: -0.0136, min: -0.1, max: 0, step: 0.0001, label: "q" },
         rParam: { value: -0.0297, min: -0.1, max: 0, step: 0.0001, label: "r" },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

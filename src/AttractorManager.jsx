@@ -76,7 +76,7 @@ const AttractorManager = ({ sharedParams }) => {
     ]),
   );
   const selections = useControls({
-    Attractors: folder(defaults, { collapsed: false }),
+    Attractors: folder(defaults, { collapsed: false, order: -10 }),
   });
 
   const selected = useMemo(

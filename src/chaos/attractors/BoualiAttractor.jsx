@@ -16,7 +16,7 @@ const BoualiAttractor = ({ sharedParams, position }) => {
         b: { value: 1, min: 0, max: 2, step: 0.01 },
         c: { value: 1, min: 0, max: 2, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

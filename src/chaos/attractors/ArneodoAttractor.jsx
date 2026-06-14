@@ -16,7 +16,7 @@ const ArneodoAttractor = ({ sharedParams, position }) => {
         b: { value: 3.5, min: 0, max: 7, step: 0.1 },
         c: { value: 1, min: 0, max: 3, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

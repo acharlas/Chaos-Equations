@@ -1,29 +1,32 @@
 import React, { useRef } from "react";
-import { Canvas, extend } from "@react-three/fiber";
-import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
-import { UnrealBloomPass } from "three-stdlib";
-import { useControls } from "leva";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Stars, Stats } from "@react-three/drei";
+import { folder, useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
 import BenchmarkHarness from "./perf/BenchmarkHarness";
-
-extend({ UnrealBloomPass });
+import AdvancedControls from "./chaos/AdvancedControls";
 
 const Scene = () => {
   const Scene = useControls(getSceneControls());
-  const { cameraDistance } = useControls(
+  const { cameraDistance, showAdvanced, showStars, showStats } = useControls(
     "View",
-    {
-      cameraDistance: {
-        value: 240,
-        min: 80,
-        max: 2000,
-        step: 20,
-        label: "Camera Distance",
+    folder(
+      {
+        cameraDistance: {
+          value: 240,
+          min: 80,
+          max: 2000,
+          step: 20,
+          label: "Camera Distance",
+        },
+        showStars: { value: true, label: "Show Stars" },
+        showStats: { value: false, label: "Show Stats" },
+        showAdvanced: { value: false, label: "Show advanced" },
       },
-    },
-    { collapsed: true },
+      { collapsed: true, order: -6 },
+    ),
   );
 
   const controlsRef = useRef();
@@ -37,14 +40,6 @@ const Scene = () => {
     globalScale,
     dt,
     substeps,
-    showStats,
-    showStars,
-    maxDpr,
-
-    bloom,
-    bloom_threshold,
-    bloom_strength,
-    bloom_radius,
   } = Scene;
 
   const sharedParams = {
@@ -62,7 +57,7 @@ const Scene = () => {
     <Canvas
       shadows
       gl={{ antialias: true }}
-      dpr={[1, maxDpr]}
+      dpr={[1, 2]}
       camera={{
         position: [
           -cameraDistance * 0.7,
@@ -78,15 +73,7 @@ const Scene = () => {
       {showStats && <Stats className="stats-panel" />}
       <BenchmarkHarness />
       <AttractorManager sharedParams={sharedParams} />
-      {bloom && (
-        <Effects disableGamma>
-          <unrealBloomPass
-            threshold={bloom_threshold}
-            strength={bloom_strength}
-            radius={bloom_radius}
-          />
-        </Effects>
-      )}
+      {showAdvanced && <AdvancedControls />}
       <OrbitControls ref={controlsRef} />
       <CameraResetButton controlsRef={controlsRef} />
     </Canvas>

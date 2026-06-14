@@ -16,7 +16,7 @@ const LorenzAttractor = ({ sharedParams, position }) => {
         b: { value: 28, min: 15, max: 45, step: 1 },
         c: { value: 2.67, min: 1, max: 5, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

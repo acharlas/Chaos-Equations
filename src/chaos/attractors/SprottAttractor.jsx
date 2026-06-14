@@ -14,7 +14,7 @@ const SprottAttractor = ({ sharedParams, position }) => {
       {
         a: { value: 1, min: -1.5, max: 1.5, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

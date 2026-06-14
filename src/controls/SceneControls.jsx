@@ -4,16 +4,16 @@ export const getSceneControls = () => ({
   Simulation: folder(
     {
       Npoints: {
-        value: 600,
+        value: 500,
         min: 1,
-        max: 15000,
+        max: 1000,
         step: 1,
         label: "Particles",
       },
       trailLength: {
-        value: 600,
+        value: 400,
         min: 100,
-        max: 1600,
+        max: 800,
         step: 10,
         label: "Trail Length",
       },
@@ -39,7 +39,7 @@ export const getSceneControls = () => ({
         label: "Substeps",
       },
     },
-    { collapsed: false }
+    { collapsed: false, order: -5 },
   ),
 
   Colors: folder(
@@ -54,60 +54,6 @@ export const getSceneControls = () => ({
         label: "Speed Color Boost",
       },
     },
-    { collapsed: false }
-  ),
-
-  Performance: folder(
-    {
-      maxDpr: {
-        value: 1.25,
-        min: 0.75,
-        max: 2,
-        step: 0.1,
-        label: "Render Resolution",
-      },
-    },
-    { collapsed: true }
-  ),
-
-  Effects: folder(
-    {
-      bloom: { value: false, label: "Bloom" },
-      "Bloom Settings": folder(
-        {
-          bloom_threshold: {
-            value: 0.35,
-            min: 0,
-            max: 1,
-            step: 0.01,
-            label: "Threshold",
-          },
-          bloom_strength: {
-            value: 0.9,
-            min: 0,
-            max: 3,
-            step: 0.01,
-            label: "Strength",
-          },
-          bloom_radius: {
-            value: 0.6,
-            min: 0,
-            max: 1.2,
-            step: 0.01,
-            label: "Radius",
-          },
-        },
-        { collapsed: true }
-      ),
-    },
-    { collapsed: true }
-  ),
-
-  View: folder(
-    {
-      showStats: { value: false, label: "Show Stats" },
-      showStars: { value: true, label: "Show Stars" },
-    },
-    { collapsed: true }
+    { collapsed: false, order: -4 },
   ),
 });

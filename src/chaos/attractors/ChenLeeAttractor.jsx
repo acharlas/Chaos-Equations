@@ -16,7 +16,7 @@ const ChenLeeAttractor = ({ sharedParams, position }) => {
         b: { value: -3, min: -10, max: 0, step: 0.1 },
         c: { value: -0.38, min: -1, max: 1, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

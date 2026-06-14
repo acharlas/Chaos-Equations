@@ -18,7 +18,7 @@ const DadrasAttractor = ({ sharedParams, position }) => {
         d: { value: 2, min: 1, max: 3, step: 0.1 },
         e: { value: 9, min: 5, max: 12, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

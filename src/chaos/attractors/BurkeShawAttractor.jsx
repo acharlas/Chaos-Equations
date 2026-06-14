@@ -15,7 +15,7 @@ const BurkeShawAttractor = ({ sharedParams, position }) => {
         a: { value: 10, min: 5, max: 18, step: 0.1 },
         b: { value: 13, min: 5, max: 18, step: 0.1 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),

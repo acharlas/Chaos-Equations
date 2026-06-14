@@ -14,7 +14,7 @@ const NoseHooverAttractor = ({ sharedParams, position }) => {
       {
         a: { value: 1.5, min: 0.5, max: 3, step: 0.01 },
       },
-      { order: -1 }
+      { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
     restart: button(() => setRestartTrigger((prev) => prev + 1)),
