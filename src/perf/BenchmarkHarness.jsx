@@ -14,6 +14,11 @@ const LiveHud = ({ hudTextRef }) => {
   });
 
   useEffect(() => {
+    rollingRef.current.reset();
+    rollingRef.current.start();
+  }, []);
+
+  useEffect(() => {
     const updateHud = () => {
       const r = rollingRef.current.getReport({ warmupFrames: 5 });
       if (!r) {
@@ -39,6 +44,11 @@ const LiveHud = ({ hudTextRef }) => {
 const WorkTimeProbe = ({ active }) => {
   const profilerRef = useRef(new FrameProfiler(PROFILER_CAPACITY));
   const workRef = useRef(0);
+
+  useEffect(() => {
+    profilerRef.current.reset();
+    profilerRef.current.start();
+  }, []);
 
   useFrame((state) => {
     if (!active) return;
