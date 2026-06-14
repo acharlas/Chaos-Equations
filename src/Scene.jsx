@@ -10,9 +10,8 @@ import AdvancedControls from "./chaos/AdvancedControls";
 
 const Scene = () => {
   const Scene = useControls(getSceneControls());
-  const { cameraDistance, showAdvanced, showStars, showStats } = useControls(
-    "View",
-    folder(
+  const { cameraDistance, showAdvanced, showStars, showStats } = useControls({
+    View: folder(
       {
         cameraDistance: {
           value: 240,
@@ -27,7 +26,7 @@ const Scene = () => {
       },
       { collapsed: true, order: -6 },
     ),
-  );
+  });
 
   const controlsRef = useRef();
 
