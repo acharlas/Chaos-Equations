@@ -7,7 +7,6 @@ import * as THREE from "three";
 
 const ChuaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { aParam, bParam, kParam, pParam, qParam, rParam } = useControls({
     Chua: folder(
@@ -22,7 +21,6 @@ const ChuaAttractor = ({ sharedParams, position }) => {
       { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -59,7 +57,6 @@ const ChuaAttractor = ({ sharedParams, position }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

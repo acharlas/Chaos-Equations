@@ -7,7 +7,6 @@ import * as THREE from "three";
 
 const DadrasAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c, d, e } = useControls({
     Dadras: folder(
@@ -21,7 +20,6 @@ const DadrasAttractor = ({ sharedParams, position }) => {
       { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -48,7 +46,6 @@ const DadrasAttractor = ({ sharedParams, position }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

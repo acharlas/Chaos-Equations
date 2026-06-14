@@ -7,7 +7,6 @@ import { AizawaEquation } from "../equations/AizawaEquation";
 
 const AizawaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b, c, d, e, f } = useControls({
     Aizawa: folder(
@@ -22,7 +21,6 @@ const AizawaAttractor = ({ sharedParams, position }) => {
       { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -49,7 +47,6 @@ const AizawaAttractor = ({ sharedParams, position }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

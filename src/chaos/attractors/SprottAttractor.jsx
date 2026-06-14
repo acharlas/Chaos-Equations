@@ -7,7 +7,6 @@ import * as THREE from "three";
 
 const SprottAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a } = useControls({
     Sprott: folder(
@@ -17,7 +16,6 @@ const SprottAttractor = ({ sharedParams, position }) => {
       { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -44,7 +42,6 @@ const SprottAttractor = ({ sharedParams, position }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

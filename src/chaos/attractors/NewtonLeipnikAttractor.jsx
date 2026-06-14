@@ -7,7 +7,6 @@ import * as THREE from "three";
 
 const NewtonLeipnikAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
-  const [restartTrigger, setRestartTrigger] = useState(0);
 
   const { a, b } = useControls({
     NewtonLeipnik: folder(
@@ -18,7 +17,6 @@ const NewtonLeipnikAttractor = ({ sharedParams, position }) => {
       { collapsed: true, order: -1 }
     ),
     freeze: button(() => setFreeze((prev) => !prev)),
-    restart: button(() => setRestartTrigger((prev) => prev + 1)),
   });
 
   const { lowSpeedHex, highSpeedHex, globalScale } = sharedParams;
@@ -45,7 +43,6 @@ const NewtonLeipnikAttractor = ({ sharedParams, position }) => {
         lowSpeedColor={lowSpeedColor}
         highSpeedColor={highSpeedColor}
         freeze={freeze}
-        restartTrigger={restartTrigger}
       />
     </AttractorWrapper>
   );

@@ -13,7 +13,6 @@ const ChaosManager = ({
   lowSpeedColor,
   highSpeedColor,
   freeze,
-  restartTrigger,
 }) => {
   const { gl } = useThree();
   if (!sharedParams) {
@@ -145,15 +144,15 @@ const ChaosManager = ({
     const speeds = trailSpeedsRef.current;
     if (speeds && speeds.length > 0) speeds.fill(0);
     autoRangeInitializedRef.current = false;
-  }, [restartTrigger, renderTrailLength, Npoints]);
+  }, [renderTrailLength, Npoints]);
 
   useEffect(() => {
     globalWriteIndexRef.current = renderTrailLength > 1 ? 1 : 0;
-  }, [renderTrailLength, restartTrigger, Npoints]);
+  }, [renderTrailLength, Npoints]);
 
   useEffect(() => {
     autoRangeInitializedRef.current = false;
-  }, [restartTrigger]);
+  }, []);
 
   useEffect(() => {
     if (!sphereMeshRef.current) return;
