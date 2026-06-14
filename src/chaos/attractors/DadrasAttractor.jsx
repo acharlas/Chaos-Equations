@@ -5,7 +5,7 @@ import { DadrasEquation } from "../equations/DadrasEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const DadrasAttractor = ({ sharedParams }) => {
+const DadrasAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -41,7 +41,7 @@ const DadrasAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Dadras">
+    <AttractorWrapper globalScale={globalScale} attractorId="Dadras" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

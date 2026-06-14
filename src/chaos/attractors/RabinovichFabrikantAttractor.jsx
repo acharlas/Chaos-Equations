@@ -5,7 +5,7 @@ import { RabinovichFabrikantEquation } from "../equations/RabinovichFabrikantEqu
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const RabinovichFabrikantAttractor = ({ sharedParams }) => {
+const RabinovichFabrikantAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -79,7 +79,7 @@ const RabinovichFabrikantAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="RabinovichFabrikant">
+    <AttractorWrapper globalScale={globalScale} attractorId="RabinovichFabrikant" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

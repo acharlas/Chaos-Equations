@@ -5,7 +5,7 @@ import { BoualiEquation } from "../equations/BoualiEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const BoualiAttractor = ({ sharedParams }) => {
+const BoualiAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -39,7 +39,7 @@ const BoualiAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Bouali">
+    <AttractorWrapper globalScale={globalScale} attractorId="Bouali" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

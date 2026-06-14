@@ -5,7 +5,7 @@ import AttractorWrapper from "./AttractorWrapper";
 import { ThomasEquation } from "../equations/ThomasEquation";
 import * as THREE from "three";
 
-const ThomasAttractor = ({ sharedParams }) => {
+const ThomasAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -37,7 +37,7 @@ const ThomasAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Thomas">
+    <AttractorWrapper globalScale={globalScale} attractorId="Thomas" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

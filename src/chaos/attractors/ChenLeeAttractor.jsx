@@ -5,7 +5,7 @@ import AttractorWrapper from "./AttractorWrapper";
 import { ChenLeeEquation } from "../equations/ChenLeeEquation";
 import * as THREE from "three";
 
-const ChenLeeAttractor = ({ sharedParams }) => {
+const ChenLeeAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -41,7 +41,7 @@ const ChenLeeAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee">
+    <AttractorWrapper globalScale={globalScale} attractorId="ChenLee" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

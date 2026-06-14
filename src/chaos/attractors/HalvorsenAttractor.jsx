@@ -5,7 +5,7 @@ import { HalvorsenEquation } from "../equations/HalvorsenEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const HalvorsenAttractor = ({ sharedParams }) => {
+const HalvorsenAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -37,7 +37,7 @@ const HalvorsenAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen">
+    <AttractorWrapper globalScale={globalScale} attractorId="Halvorsen" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

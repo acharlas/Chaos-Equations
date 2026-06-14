@@ -5,7 +5,7 @@ import { LorenzEquation } from "../equations/LorenzEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const LorenzAttractor = ({ sharedParams }) => {
+const LorenzAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -38,7 +38,7 @@ const LorenzAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Lorenz">
+    <AttractorWrapper globalScale={globalScale} attractorId="Lorenz" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

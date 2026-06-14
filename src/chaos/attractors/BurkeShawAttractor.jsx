@@ -5,7 +5,7 @@ import { BurkeShawEquation } from "../equations/BurkeShawEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const BurkeShawAttractor = ({ sharedParams }) => {
+const BurkeShawAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -38,7 +38,7 @@ const BurkeShawAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw">
+    <AttractorWrapper globalScale={globalScale} attractorId="BurkeShaw" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

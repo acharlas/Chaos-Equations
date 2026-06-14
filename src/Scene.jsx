@@ -12,6 +12,19 @@ extend({ UnrealBloomPass });
 
 const Scene = () => {
   const Scene = useControls(getSceneControls());
+  const { cameraDistance } = useControls(
+    "View",
+    {
+      cameraDistance: {
+        value: 240,
+        min: 80,
+        max: 2000,
+        step: 20,
+        label: "Camera Distance",
+      },
+    },
+    { collapsed: true },
+  );
 
   const controlsRef = useRef();
 
@@ -53,10 +66,14 @@ const Scene = () => {
       gl={{ antialias: true }}
       dpr={[1, maxDpr]}
       camera={{
-        position: [-140, -140, -160],
+        position: [
+          -cameraDistance * 0.7,
+          -cameraDistance * 0.7,
+          -cameraDistance * 0.8,
+        ],
         fov: 75,
         near: 0.01,
-        far: 3000,
+        far: 5000,
       }}
     >
       {showStars && <Stars radius={1200} depth={1} />}

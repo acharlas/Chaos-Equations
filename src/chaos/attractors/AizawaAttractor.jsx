@@ -5,7 +5,7 @@ import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 import { AizawaEquation } from "../equations/AizawaEquation";
 
-const AizawaAttractor = ({ sharedParams }) => {
+const AizawaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -42,7 +42,7 @@ const AizawaAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Aizawa">
+    <AttractorWrapper globalScale={globalScale} attractorId="Aizawa" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

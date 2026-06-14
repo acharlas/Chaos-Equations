@@ -5,7 +5,7 @@ import { RosslerEquation } from "../equations/RosslerEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const RosslerAttractor = ({ sharedParams }) => {
+const RosslerAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -39,7 +39,7 @@ const RosslerAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Rossler">
+    <AttractorWrapper globalScale={globalScale} attractorId="Rossler" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

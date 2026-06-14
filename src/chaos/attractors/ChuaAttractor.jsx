@@ -5,7 +5,7 @@ import { ChuaEquation } from "../equations/ChuaEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const ChuaAttractor = ({ sharedParams }) => {
+const ChuaAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -52,7 +52,7 @@ const ChuaAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Chua">
+    <AttractorWrapper globalScale={globalScale} attractorId="Chua" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

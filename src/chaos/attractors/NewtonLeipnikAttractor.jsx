@@ -5,7 +5,7 @@ import { NewtonLeipnikEquation } from "../equations/NewtonLeipnikEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const NewtonLeipnikAttractor = ({ sharedParams }) => {
+const NewtonLeipnikAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -38,7 +38,7 @@ const NewtonLeipnikAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="NewtonLeipnik">
+    <AttractorWrapper globalScale={globalScale} attractorId="NewtonLeipnik" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

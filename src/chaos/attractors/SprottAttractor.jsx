@@ -5,7 +5,7 @@ import { SprottEquation } from "../equations/SprottEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const SprottAttractor = ({ sharedParams }) => {
+const SprottAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -37,7 +37,7 @@ const SprottAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Sprott">
+    <AttractorWrapper globalScale={globalScale} attractorId="Sprott" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

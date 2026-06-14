@@ -5,7 +5,7 @@ import { NoseHooverEquation } from "../equations/NoseHooverEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const NoseHooverAttractor = ({ sharedParams }) => {
+const NoseHooverAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -37,7 +37,7 @@ const NoseHooverAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover">
+    <AttractorWrapper globalScale={globalScale} attractorId="NoseHoover" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}

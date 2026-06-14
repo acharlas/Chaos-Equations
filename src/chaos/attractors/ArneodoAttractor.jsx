@@ -5,7 +5,7 @@ import { ArneodoEquation } from "../equations/ArneodoEquation";
 import AttractorWrapper from "./AttractorWrapper";
 import * as THREE from "three";
 
-const ArneodoAttractor = ({ sharedParams }) => {
+const ArneodoAttractor = ({ sharedParams, position }) => {
   const [freeze, setFreeze] = useState(false);
   const [restartTrigger, setRestartTrigger] = useState(0);
 
@@ -39,7 +39,7 @@ const ArneodoAttractor = ({ sharedParams }) => {
   };
 
   return (
-    <AttractorWrapper globalScale={globalScale} attractorId="Arneodo">
+    <AttractorWrapper globalScale={globalScale} attractorId="Arneodo" position={position}>
       <ChaosManager
         equation={equation}
         sharedParams={sharedParams}
