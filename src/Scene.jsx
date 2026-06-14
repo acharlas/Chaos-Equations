@@ -1,12 +1,15 @@
 import React, { useRef } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stars, Stats } from "@react-three/drei";
+import { Canvas, extend } from "@react-three/fiber";
+import { OrbitControls, Stars, Effects, Stats } from "@react-three/drei";
+import { UnrealBloomPass } from "three-stdlib";
 import { folder, useControls } from "leva";
 import AttractorManager from "./AttractorManager";
 import CameraResetButton from "./CameraResetButton";
 import { getSceneControls } from "./controls/SceneControls";
 import BenchmarkHarness from "./perf/BenchmarkHarness";
 import AdvancedControls from "./chaos/AdvancedControls";
+
+extend({ UnrealBloomPass });
 
 const Scene = () => {
   const Scene = useControls(getSceneControls());
@@ -28,17 +31,18 @@ const Scene = () => {
     ),
   });
 
-  const controlsRef = useRef();
-
   const {
     Npoints,
     trailLength,
     lowSpeedHex,
     highSpeedHex,
-    speedContrast,
     globalScale,
     dt,
     substeps,
+    bloom,
+    bloom_threshold,
+    bloom_strength,
+    bloom_radius,
   } = Scene;
 
   const sharedParams = {
@@ -48,9 +52,10 @@ const Scene = () => {
     trailLength,
     lowSpeedHex,
     highSpeedHex,
-    speedContrast,
     globalScale,
   };
+
+  const controlsRef = useRef();
 
   return (
     <Canvas
@@ -70,9 +75,18 @@ const Scene = () => {
     >
       {showStars && <Stars radius={1200} depth={1} />}
       {showStats && <Stats className="stats-panel" />}
-      <BenchmarkHarness />
       <AttractorManager sharedParams={sharedParams} />
+      {showAdvanced && <BenchmarkHarness />}
       {showAdvanced && <AdvancedControls />}
+      {bloom && (
+        <Effects disableGamma>
+          <unrealBloomPass
+            threshold={bloom_threshold}
+            strength={bloom_strength}
+            radius={bloom_radius}
+          />
+        </Effects>
+      )}
       <OrbitControls ref={controlsRef} />
       <CameraResetButton controlsRef={controlsRef} />
     </Canvas>

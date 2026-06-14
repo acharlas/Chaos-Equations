@@ -46,14 +46,40 @@ export const getSceneControls = () => ({
     {
       lowSpeedHex: { value: "#0000ff", label: "Low Speed Color" },
       highSpeedHex: { value: "#00ff00", label: "High Speed Color" },
-      speedContrast: {
-        value: 0.55,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        label: "Speed Color Boost",
-      },
     },
     { collapsed: false, order: -4 },
+  ),
+
+  Effects: folder(
+    {
+      bloom: { value: false, label: "Bloom" },
+      "Bloom Settings": folder(
+        {
+          bloom_threshold: {
+            value: 0.35,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            label: "Threshold",
+          },
+          bloom_strength: {
+            value: 0.9,
+            min: 0,
+            max: 3,
+            step: 0.01,
+            label: "Strength",
+          },
+          bloom_radius: {
+            value: 0.6,
+            min: 0,
+            max: 1.2,
+            step: 0.01,
+            label: "Radius",
+          },
+        },
+        { collapsed: true },
+      ),
+    },
+    { collapsed: true, order: -3 },
   ),
 });
