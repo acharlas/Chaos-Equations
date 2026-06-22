@@ -171,9 +171,8 @@ const ChaosManager = ({ equationFn, params }) => {
           indexArray[restoreOffset] = prev * N + p;
           indexArray[restoreOffset + 1] = ((prev + 1) % trailLength) * N + p;
         }
-        const restoreStart = prev * 2;
-        const restoreEnd = prev * 2 + N * trailLength * 2;
-        if (restoreStart < minIndexUpdate) minIndexUpdate = restoreStart;
+        if (prev * 2 < minIndexUpdate) minIndexUpdate = prev * 2;
+        const restoreEnd = (N - 1) * trailLength * 2 + prev * 2 + 2;
         if (restoreEnd > maxIndexUpdate) maxIndexUpdate = restoreEnd;
       }
       for (let p = 0; p < N; p++) {
@@ -182,6 +181,9 @@ const ChaosManager = ({ equationFn, params }) => {
         indexArray[breakOffset] = v;
         indexArray[breakOffset + 1] = v;
       }
+      if (timeWrapSegment * 2 < minIndexUpdate) minIndexUpdate = timeWrapSegment * 2;
+      const breakEnd = (N - 1) * trailLength * 2 + timeWrapSegment * 2 + 2;
+      if (breakEnd > maxIndexUpdate) maxIndexUpdate = breakEnd;
       lastBreakSegmentRef.current = timeWrapSegment;
     }
     for (let i = 0; i < N; i++) {
