@@ -8,7 +8,6 @@ export default [
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
-      ecmaVersion: 2020,
       globals: globals.browser,
       parserOptions: {
         ecmaVersion: 'latest',
@@ -28,6 +27,8 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      'react-hooks/refs': 'off',
+      'react-hooks/immutability': 'off',
     },
   },
 ]

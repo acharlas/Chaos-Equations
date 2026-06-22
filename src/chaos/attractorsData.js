@@ -1,0 +1,200 @@
+// All attractors in one place. eq is the function ChaosManager will call per
+// step; for Euler-stepped systems it's the bare ODE, for Rabinovich-Fabrikant
+// it's the RK4 wrapper around the bare ODE. params is the leva schema used to
+// expose per-attractor knobs in the UI. scale is the per-attractor local
+// multiplier; the global scale comes from useControls in the renderer.
+import {
+  AizawaEquation,
+  ArneodoEquation,
+  BoualiEquation,
+  BurkeShawEquation,
+  ChenLeeEquation,
+  ChuaEquation,
+  DadrasEquation,
+  HalvorsenEquation,
+  LorenzEquation,
+  NewtonLeipnikEquation,
+  NoseHooverEquation,
+  RabinovichFabrikantEquation,
+  rk4Integrate,
+  RosslerEquation,
+  SprottEquation,
+  ThomasEquation,
+} from "./equations.js";
+
+export const ATTRACTORS = [
+  {
+    id: "Lorenz",
+    label: "Lorenz",
+    group: "Classic",
+    scale: 1,
+    eq: LorenzEquation,
+    params: {
+      a: { value: 10, min: 5, max: 20, step: 0.5 },
+      b: { value: 28, min: 15, max: 45, step: 1 },
+      c: { value: 2.67, min: 1, max: 5, step: 0.01 },
+    },
+  },
+  {
+    id: "Halvorsen",
+    label: "Halvorsen",
+    group: "Classic",
+    scale: 1,
+    eq: HalvorsenEquation,
+    params: { a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 } },
+  },
+  {
+    id: "Rossler",
+    label: "Rossler",
+    group: "Classic",
+    scale: 2,
+    eq: RosslerEquation,
+    params: {
+      a: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
+      b: { value: 0.2, min: 0, max: 0.4, step: 0.01 },
+      c: { value: 5.7, min: 2, max: 10, step: 0.1 },
+    },
+  },
+  {
+    id: "Thomas",
+    label: "Thomas",
+    group: "Classic",
+    scale: 5,
+    eq: ThomasEquation,
+    params: { b: { value: 0.19, min: 0.12, max: 0.3, step: 0.01 } },
+  },
+  {
+    id: "Sprott",
+    label: "Sprott",
+    group: "Classic",
+    scale: 4,
+    eq: SprottEquation,
+    params: { a: { value: 1, min: -1.5, max: 1.5, step: 0.01 } },
+  },
+  {
+    id: "Aizawa",
+    label: "Aizawa",
+    group: "Polynomial",
+    scale: 10,
+    eq: AizawaEquation,
+    params: {
+      a: { value: 0.95, min: 0, max: 1.5, step: 0.01 },
+      b: { value: 0.7, min: 0, max: 1.5, step: 0.01 },
+      c: { value: 0.6, min: 0, max: 1.5, step: 0.01 },
+      d: { value: 3.5, min: 0, max: 6, step: 0.1 },
+      e: { value: 0.25, min: 0, max: 0.8, step: 0.01 },
+      f: { value: 0.1, min: 0, max: 0.8, step: 0.01 },
+    },
+  },
+  {
+    id: "Bouali",
+    label: "Bouali",
+    group: "Polynomial",
+    scale: 10,
+    eq: BoualiEquation,
+    params: {
+      a: { value: 0.3, min: 0, max: 0.8, step: 0.01 },
+      b: { value: 1, min: 0, max: 2, step: 0.01 },
+      c: { value: 1, min: 0, max: 2, step: 0.01 },
+    },
+  },
+  {
+    id: "ChenLee",
+    label: "Chen-Lee",
+    group: "Polynomial",
+    scale: 3,
+    eq: ChenLeeEquation,
+    params: {
+      a: { value: 0.9, min: 0, max: 5, step: 0.1 },
+      b: { value: -3, min: -10, max: 0, step: 0.1 },
+      c: { value: -0.38, min: -1, max: 1, step: 0.01 },
+    },
+  },
+  {
+    id: "BurkeShaw",
+    label: "Burke-Shaw",
+    group: "Polynomial",
+    scale: 2,
+    eq: BurkeShawEquation,
+    params: {
+      a: { value: 10, min: 5, max: 18, step: 0.1 },
+      b: { value: 13, min: 5, max: 18, step: 0.1 },
+    },
+  },
+  {
+    id: "Dadras",
+    label: "Dadras",
+    group: "Polynomial",
+    scale: 2,
+    eq: DadrasEquation,
+    params: {
+      a: { value: 3, min: 1, max: 5, step: 0.1 },
+      b: { value: 2.7, min: 1, max: 4, step: 0.1 },
+      c: { value: 1.7, min: 1, max: 3, step: 0.1 },
+      d: { value: 2, min: 1, max: 3, step: 0.1 },
+      e: { value: 9, min: 5, max: 12, step: 0.1 },
+    },
+  },
+  {
+    id: "RabinovichFabrikant",
+    label: "Rabinovich-Fabrikant",
+    group: "Polynomial",
+    scale: 1,
+    eq: (x, y, z, dt, p, out) =>
+      rk4Integrate(RabinovichFabrikantEquation, x, y, z, dt, p, out),
+    params: {
+      alpha: { value: 0.14, min: 0.05, max: 0.4, step: 0.01 },
+      gamma: { value: 0.1, min: 0, max: 0.2, step: 0.01 },
+    },
+  },
+  {
+    id: "Chua",
+    label: "Chua",
+    group: "Other",
+    scale: 7,
+    eq: ChuaEquation,
+    params: {
+      a: { value: 0.1, min: 0, max: 1, step: 0.01 },
+      b: { value: -0.48, min: -2, max: 0, step: 0.01 },
+      k: { value: 1, min: 0, max: 2, step: 0.01 },
+      p: { value: -1.3, min: -3, max: 0, step: 0.01 },
+      q: { value: -0.0136, min: -0.1, max: 0, step: 0.0001 },
+      r: { value: -0.0297, min: -0.1, max: 0, step: 0.0001 },
+    },
+  },
+  {
+    id: "NewtonLeipnik",
+    label: "Newton-Leipnik",
+    group: "Other",
+    scale: 10,
+    eq: NewtonLeipnikEquation,
+    params: {
+      a: { value: 0.4, min: 0, max: 1, step: 0.01 },
+      b: { value: 0.175, min: 0, max: 0.5, step: 0.001 },
+    },
+  },
+  {
+    id: "NoseHoover",
+    label: "Nose-Hoover",
+    group: "Other",
+    scale: 5,
+    eq: NoseHooverEquation,
+    params: { a: { value: 1.5, min: 0.5, max: 3, step: 0.01 } },
+  },
+  {
+    id: "Arneodo",
+    label: "Arneodo",
+    group: "Other",
+    scale: 3,
+    eq: ArneodoEquation,
+    params: {
+      a: { value: 5.5, min: 0, max: 7, step: 0.1 },
+      b: { value: 3.5, min: 0, max: 7, step: 0.1 },
+      c: { value: 1, min: 0, max: 3, step: 0.1 },
+    },
+  },
+];
+
+export const ATTRACTOR_BY_ID = Object.fromEntries(
+  ATTRACTORS.map((a) => [a.id, a]),
+);

@@ -1,30 +1,31 @@
 // Smoke tests for the pure ODE equations. These are the integration kernels
 // that ChaosManager relies on. We assert:
 //   1. Each equation returns the documented shape (3 floats).
-//   2. The default Leva parameterization keeps the attractor bounded — the
+//   2. The default parameterization keeps the attractor bounded — the
 //      particles do not blow up to Infinity or collapse to NaN after a few
 //      thousand steps. This is the contract the simulation depends on for
 //      stable rendering.
-//   3. Determinism: given the same inputs, equations return the same outputs
-//      (so the upcoming SoA refactor can rely on reproducibility).
+//   3. Determinism: given the same inputs, equations return the same outputs.
 
 import { describe, it, expect } from "vitest";
 
-import { AizawaEquation } from "../src/chaos/equations/AizawaEquation.js";
-import { ArneodoEquation } from "../src/chaos/equations/ArneodoEquation.js";
-import { BoualiEquation } from "../src/chaos/equations/BoualiEquation.js";
-import { BurkeShawEquation } from "../src/chaos/equations/BurkeShawEquation.js";
-import { ChenLeeEquation } from "../src/chaos/equations/ChenLeeEquation.js";
-import { ChuaEquation } from "../src/chaos/equations/ChuaEquation.js";
-import { DadrasEquation } from "../src/chaos/equations/DadrasEquation.js";
-import { HalvorsenEquation } from "../src/chaos/equations/HalvorsenEquation.js";
-import { LorenzEquation } from "../src/chaos/equations/LorenzEquation.js";
-import { NewtonLeipnikEquation } from "../src/chaos/equations/NewtonLeipnikEquation.js";
-import { NoseHooverEquation } from "../src/chaos/equations/NoseHooverEquation.js";
-import { RabinovichFabrikantEquation } from "../src/chaos/equations/RabinovichFabrikantEquation.js";
-import { RosslerEquation } from "../src/chaos/equations/RosslerEquation.js";
-import { SprottEquation } from "../src/chaos/equations/SprottEquation.js";
-import { ThomasEquation } from "../src/chaos/equations/ThomasEquation.js";
+import {
+  AizawaEquation,
+  ArneodoEquation,
+  BoualiEquation,
+  BurkeShawEquation,
+  ChenLeeEquation,
+  ChuaEquation,
+  DadrasEquation,
+  HalvorsenEquation,
+  LorenzEquation,
+  NewtonLeipnikEquation,
+  NoseHooverEquation,
+  RabinovichFabrikantEquation,
+  RosslerEquation,
+  SprottEquation,
+  ThomasEquation,
+} from "../src/chaos/equations.js";
 
 const STEPS = 5000;
 const DT = 0.001;
