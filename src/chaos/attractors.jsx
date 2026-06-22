@@ -10,17 +10,11 @@ const computeGridPositions = (count) => {
   if (count === 1) return [[0, 0, 0]];
   const cols = Math.ceil(Math.sqrt(count));
   const rows = Math.ceil(count / cols);
-  const positions = [];
-  for (let i = 0; i < count; i++) {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    positions.push([
-      (col - (cols - 1) / 2) * SPACING,
-      0,
-      (row - (rows - 1) / 2) * SPACING,
-    ]);
-  }
-  return positions;
+  return Array.from({ length: count }, (_, i) => [
+    ((i % cols) - (cols - 1) / 2) * SPACING,
+    0,
+    (Math.floor(i / cols) - (rows - 1) / 2) * SPACING,
+  ]);
 };
 
 const AttractorView = ({ record, position, globalScale }) => {
@@ -36,18 +30,21 @@ const AttractorView = ({ record, position, globalScale }) => {
 };
 
 export const AttractorManager = ({ globalScale }) => {
-  const schema = useMemo(() => {
-    const out = {};
-    for (const group of new Set(ATTRACTORS.map((a) => a.group))) {
-      const bucket = {};
-      for (const a of ATTRACTORS) {
-        if (a.group !== group) continue;
-        bucket[a.id] = { value: a.id === "Halvorsen", label: a.label };
-      }
-      out[group] = folder(bucket, { collapsed: true });
-    }
-    return out;
-  }, []);
+  const groups = [...new Set(ATTRACTORS.map((a) => a.group))];
+  const schema = Object.fromEntries(
+    groups.map((g) => [
+      g,
+      folder(
+        Object.fromEntries(
+          ATTRACTORS.filter((a) => a.group === g).map((a) => [
+            a.id,
+            { value: a.id === "Halvorsen", label: a.label },
+          ]),
+        ),
+        { collapsed: true },
+      ),
+    ]),
+  );
   const selections = useControls({
     Attractors: folder(schema, { collapsed: false, order: -10 }),
   });

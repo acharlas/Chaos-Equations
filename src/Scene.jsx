@@ -9,12 +9,7 @@ import { SIMULATION_SCHEMA } from "./chaos/simulationSchema.js";
 extend({ UnrealBloomPass });
 
 const VIEW_SCHEMA = {
-  View: folder(
-    {
-      showStars: { value: true, label: "Show Stars" },
-    },
-    { collapsed: true, order: -6 },
-  ),
+  showStars: { value: true, label: "Show Stars" },
   Effects: folder(
     {
       bloom: { value: false, label: "Bloom" },

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useControls } from "leva";
-import { percentileRange } from "./equations.js";
 import { SIMULATION_SCHEMA } from "./simulationSchema.js";
 
 const BASE_DT = 0.003;
@@ -10,6 +9,8 @@ const SUBSTEPS = 2;
 const SPEED_RANGE_UPDATE_INTERVAL = 10;
 const MAX_SPEED_SAMPLES = 2000;
 const AUTO_SPEED_SMOOTHING = 0.15;
+const SPEED_PCT_LO = 0.1;
+const SPEED_PCT_HI = 0.9;
 
 const ChaosManager = ({ equationFn, params }) => {
   const sim = useControls(SIMULATION_SCHEMA);
@@ -25,28 +26,20 @@ const ChaosManager = ({ equationFn, params }) => {
   const trailsGeometryRef = useRef(new THREE.BufferGeometry());
   const trailPositionsRef = useRef(new Float32Array(0));
   const trailColorsRef = useRef(new Float32Array(0));
-  const trailSpeedsRef = useRef(new Float32Array(0));
   const trailPositionAttrRef = useRef(null);
   const trailColorAttrRef = useRef(null);
   const trailIndexAttrRef = useRef(null);
-  const breakSegmentsRef = useRef([]);
+  const lastBreakSegmentRef = useRef(-1);
   const globalWriteIndexRef = useRef(0);
   const autoSpeedMinRef = useRef(0);
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
   const frameCountRef = useRef(0);
-  const drRef = useRef(0);
-  const dgRef = useRef(0);
-  const dbRef = useRef(0);
   const equationRef = useRef(equationFn);
   const eqOutRef = useRef(new Float32Array(3));
   const posXRef = useRef(new Float32Array(0));
   const posYRef = useRef(new Float32Array(0));
   const posZRef = useRef(new Float32Array(0));
-  const initPosXRef = useRef(new Float32Array(0));
-  const initPosYRef = useRef(new Float32Array(0));
-  const initPosZRef = useRef(new Float32Array(0));
-  const speedRef = useRef(new Float32Array(0));
 
   useEffect(() => {
     equationRef.current = equationFn;
@@ -57,52 +50,31 @@ const ChaosManager = ({ equationFn, params }) => {
     const posX = new Float32Array(N);
     const posY = new Float32Array(N);
     const posZ = new Float32Array(N);
-    const initX = new Float32Array(N);
-    const initY = new Float32Array(N);
-    const initZ = new Float32Array(N);
     for (let i = 0; i < N; i++) {
-      const x = Math.random() * 2 - 1;
-      const y = Math.random() * 2 - 1;
-      const z = Math.random() * 2 - 1;
-      posX[i] = x;
-      posY[i] = y;
-      posZ[i] = z;
-      initX[i] = x;
-      initY[i] = y;
-      initZ[i] = z;
+      posX[i] = Math.random() * 2 - 1;
+      posY[i] = Math.random() * 2 - 1;
+      posZ[i] = Math.random() * 2 - 1;
     }
     posXRef.current = posX;
     posYRef.current = posY;
     posZRef.current = posZ;
-    initPosXRef.current = initX;
-    initPosYRef.current = initY;
-    initPosZRef.current = initZ;
-    speedRef.current = new Float32Array(N);
     autoRangeInitializedRef.current = false;
     globalWriteIndexRef.current = trailLength > 1 ? 1 : 0;
   }, [Npoints, trailLength]);
 
   useEffect(() => {
-    if (!sphereMeshRef.current) return;
-    sphereMeshRef.current.count = Npoints;
-    sphereMeshRef.current.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    sphereMeshRef.current.instanceMatrix.needsUpdate = true;
-  }, [Npoints]);
-
-  useEffect(() => {
     const totalPoints = Npoints * trailLength;
     const positions = new Float32Array(totalPoints * 3);
     const colors = new Float32Array(totalPoints * 3);
-    const speeds = new Float32Array(totalPoints);
 
-    const initX = initPosXRef.current;
-    const initY = initPosYRef.current;
-    const initZ = initPosZRef.current;
-    if (initX.length === Npoints && trailLength > 0) {
+    if (trailLength > 0) {
+      const px = posXRef.current;
+      const py = posYRef.current;
+      const pz = posZRef.current;
       for (let p = 0; p < Npoints; p++) {
-        const x = initX[p];
-        const y = initY[p];
-        const z = initZ[p];
+        const x = px[p];
+        const y = py[p];
+        const z = pz[p];
         for (let i = 0; i < trailLength; i++) {
           const base = (i * Npoints + p) * 3;
           positions[base] = x;
@@ -114,7 +86,6 @@ const ChaosManager = ({ equationFn, params }) => {
 
     trailPositionsRef.current = positions;
     trailColorsRef.current = colors;
-    trailSpeedsRef.current = speeds;
 
     const positionAttr = new THREE.BufferAttribute(positions, 3);
     positionAttr.setUsage(THREE.DynamicDrawUsage);
@@ -148,14 +119,8 @@ const ChaosManager = ({ equationFn, params }) => {
       trailsGeometryRef.current.setDrawRange(0, 0);
     }
 
-    breakSegmentsRef.current = new Array(Npoints).fill(-1);
+    lastBreakSegmentRef.current = -1;
   }, [Npoints, trailLength]);
-
-  useEffect(() => {
-    drRef.current = highSpeedColor.r - lowSpeedColor.r;
-    dgRef.current = highSpeedColor.g - lowSpeedColor.g;
-    dbRef.current = highSpeedColor.b - lowSpeedColor.b;
-  }, [lowSpeedColor, highSpeedColor]);
 
   useFrame(() => {
     if (freeze) return;
@@ -171,15 +136,12 @@ const ChaosManager = ({ equationFn, params }) => {
     const positionAttr = trailPositionAttrRef.current;
     const colorAttr = trailColorAttrRef.current;
     const colors = trailColorsRef.current;
-    const trailSpeeds = trailSpeedsRef.current;
     const indexAttr = trailIndexAttrRef.current;
     const indexArray = indexAttr ? indexAttr.array : null;
     const dtStep = dt / SUBSTEPS;
-    const breakSegments = breakSegmentsRef.current;
-    const speedSamples = speedRef.current;
-    const dr = drRef.current;
-    const dg = dgRef.current;
-    const db = dbRef.current;
+    const dr = highSpeedColor.r - lowSpeedColor.r;
+    const dg = highSpeedColor.g - lowSpeedColor.g;
+    const db = highSpeedColor.b - lowSpeedColor.b;
     const lowColR = lowSpeedColor.r;
     const lowColG = lowSpeedColor.g;
     const lowColB = lowSpeedColor.b;
@@ -201,6 +163,27 @@ const ChaosManager = ({ equationFn, params }) => {
     const speedList = [];
     let minIndexUpdate = Infinity;
     let maxIndexUpdate = -Infinity;
+    if (hasIndexBreak && lastBreakSegmentRef.current !== timeWrapSegment) {
+      const prev = lastBreakSegmentRef.current;
+      if (prev >= 0) {
+        for (let p = 0; p < N; p++) {
+          const restoreOffset = p * trailLength * 2 + prev * 2;
+          indexArray[restoreOffset] = prev * N + p;
+          indexArray[restoreOffset + 1] = ((prev + 1) % trailLength) * N + p;
+        }
+        const restoreStart = prev * 2;
+        const restoreEnd = prev * 2 + N * trailLength * 2;
+        if (restoreStart < minIndexUpdate) minIndexUpdate = restoreStart;
+        if (restoreEnd > maxIndexUpdate) maxIndexUpdate = restoreEnd;
+      }
+      for (let p = 0; p < N; p++) {
+        const breakOffset = p * trailLength * 2 + timeWrapSegment * 2;
+        const v = timeWrapSegment * N + p;
+        indexArray[breakOffset] = v;
+        indexArray[breakOffset + 1] = v;
+      }
+      lastBreakSegmentRef.current = timeWrapSegment;
+    }
     for (let i = 0; i < N; i++) {
       let x = posX[i];
       let y = posY[i];
@@ -215,7 +198,6 @@ const ChaosManager = ({ equationFn, params }) => {
       posY[i] = y;
       posZ[i] = z;
       const speed = Math.sqrt(eqOut[0] ** 2 + eqOut[1] ** 2 + eqOut[2] ** 2) / dtStep;
-      speedSamples[i] = speed;
       if (shouldUpdateRange && Number.isFinite(speed) && i % sampleStride === 0) {
         speedList.push(speed);
       }
@@ -237,52 +219,26 @@ const ChaosManager = ({ equationFn, params }) => {
         colors[colorOffset + 1] = lowColG + dg * t;
         colors[colorOffset + 2] = lowColB + db * t;
       }
-      const speedPointIndex = baseLastPointIndex + i;
-      if (speedPointIndex < trailSpeeds.length) {
-        trailSpeeds[speedPointIndex] = speed;
-      }
-      if (hasIndexBreak && indexArray) {
-        const prevBreak = breakSegments[i] ?? -1;
-        if (prevBreak !== timeWrapSegment) {
-          const baseSegmentOffset = i * trailLength * 2;
-          if (prevBreak >= 0) {
-            const restoreOffset = baseSegmentOffset + prevBreak * 2;
-            indexArray[restoreOffset] = prevBreak * N + i;
-            indexArray[restoreOffset + 1] =
-              ((prevBreak + 1) % trailLength) * N + i;
-            if (restoreOffset < minIndexUpdate) minIndexUpdate = restoreOffset;
-            const restoreEnd = restoreOffset + 1;
-            if (restoreEnd > maxIndexUpdate) maxIndexUpdate = restoreEnd;
-          }
-          const breakOffset = baseSegmentOffset + timeWrapSegment * 2;
-          const v = timeWrapSegment * N + i;
-          indexArray[breakOffset] = v;
-          indexArray[breakOffset + 1] = v;
-          if (breakOffset < minIndexUpdate) minIndexUpdate = breakOffset;
-          const breakEnd = breakOffset + 1;
-          if (breakEnd > maxIndexUpdate) maxIndexUpdate = breakEnd;
-          breakSegments[i] = timeWrapSegment;
-        }
-      }
     }
     if (mesh) mesh.instanceMatrix.needsUpdate = true;
     if (nextWriteIndex >= 0) globalWriteIndexRef.current = nextWriteIndex;
     if (shouldUpdateRange && speedList.length > 0) {
-      const range = percentileRange(speedList);
-      if (range) {
-        if (!autoRangeInitializedRef.current) {
-          autoSpeedMinRef.current = range.min;
-          autoSpeedMaxRef.current = range.max;
-          autoRangeInitializedRef.current = true;
-        } else {
-          autoSpeedMinRef.current +=
-            (range.min - autoSpeedMinRef.current) * AUTO_SPEED_SMOOTHING;
-          autoSpeedMaxRef.current +=
-            (range.max - autoSpeedMaxRef.current) * AUTO_SPEED_SMOOTHING;
-        }
-        if (autoSpeedMaxRef.current <= autoSpeedMinRef.current + 1e-6) {
-          autoSpeedMaxRef.current = autoSpeedMinRef.current + 1e-6;
-        }
+      const sorted = speedList.slice().sort((a, b) => a - b);
+      const last = sorted.length - 1;
+      const lo = sorted[Math.floor(last * SPEED_PCT_LO)];
+      const hi = sorted[Math.floor(last * SPEED_PCT_HI)];
+      if (!autoRangeInitializedRef.current) {
+        autoSpeedMinRef.current = lo;
+        autoSpeedMaxRef.current = hi;
+        autoRangeInitializedRef.current = true;
+      } else {
+        autoSpeedMinRef.current +=
+          (lo - autoSpeedMinRef.current) * AUTO_SPEED_SMOOTHING;
+        autoSpeedMaxRef.current +=
+          (hi - autoSpeedMaxRef.current) * AUTO_SPEED_SMOOTHING;
+      }
+      if (autoSpeedMaxRef.current <= autoSpeedMinRef.current + 1e-6) {
+        autoSpeedMaxRef.current = autoSpeedMinRef.current + 1e-6;
       }
     } else if (!autoRangeInitializedRef.current) {
       autoSpeedMinRef.current = 0;

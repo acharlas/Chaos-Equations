@@ -194,7 +194,3 @@ export const ATTRACTORS = [
     },
   },
 ];
-
-export const ATTRACTOR_BY_ID = Object.fromEntries(
-  ATTRACTORS.map((a) => [a.id, a]),
-);

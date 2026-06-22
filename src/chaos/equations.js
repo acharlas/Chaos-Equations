@@ -120,13 +120,3 @@ export const rk4Integrate = (eq, x, y, z, dt, params, out) => {
   out[1] = (_k1[1] + 2 * _k2[1] + 2 * _k3[1] + _k4[1]) / 6;
   out[2] = (_k1[2] + 2 * _k2[2] + 2 * _k3[2] + _k4[2]) / 6;
 };
-
-export const percentileRange = (values) => {
-  if (!values || values.length === 0) return null;
-  const sorted = Array.from(values).sort((a, b) => a - b);
-  const last = sorted.length - 1;
-  return {
-    min: sorted[Math.floor(last * 0.1)],
-    max: sorted[Math.floor(last * 0.9)],
-  };
-};
