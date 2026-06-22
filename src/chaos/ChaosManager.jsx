@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useControls } from "leva";
-import { SIMULATION_SCHEMA } from "./simulationSchema.js";
+import { folder, useControls } from "leva";
 
 const BASE_DT = 0.003;
 const SUBSTEPS = 2;
@@ -11,6 +10,32 @@ const MAX_SPEED_SAMPLES = 2000;
 const AUTO_SPEED_SMOOTHING = 0.15;
 const SPEED_PCT_LO = 0.1;
 const SPEED_PCT_HI = 0.9;
+
+export const SIMULATION_SCHEMA = {
+  Simulation: folder(
+    {
+      Npoints: { value: 500, min: 1, max: 1000, step: 1, label: "Particles" },
+      trailLength: {
+        value: 400,
+        min: 100,
+        max: 800,
+        step: 10,
+        label: "Trail Length",
+      },
+      globalScale: { value: 5, min: 2, max: 12, step: 0.1, label: "Global Scale" },
+      timeScale: { value: 1.0, min: 0.25, max: 4, step: 0.05, label: "Time Scale" },
+      freeze: { value: false, label: "Freeze" },
+    },
+    { collapsed: false, order: -5 },
+  ),
+  Colors: folder(
+    {
+      lowSpeedHex: { value: "#0000ff", label: "Low Speed Color" },
+      highSpeedHex: { value: "#00ff00", label: "High Speed Color" },
+    },
+    { collapsed: false, order: -4 },
+  ),
+};
 
 const ChaosManager = ({ equationFn, params }) => {
   const sim = useControls(SIMULATION_SCHEMA);
@@ -24,8 +49,6 @@ const ChaosManager = ({ equationFn, params }) => {
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
   const trailsGeometryRef = useRef(new THREE.BufferGeometry());
-  const trailPositionsRef = useRef(new Float32Array(0));
-  const trailColorsRef = useRef(new Float32Array(0));
   const trailPositionAttrRef = useRef(null);
   const trailColorAttrRef = useRef(null);
   const trailIndexAttrRef = useRef(null);
@@ -59,7 +82,6 @@ const ChaosManager = ({ equationFn, params }) => {
     posYRef.current = posY;
     posZRef.current = posZ;
     autoRangeInitializedRef.current = false;
-    globalWriteIndexRef.current = trailLength > 1 ? 1 : 0;
   }, [Npoints, trailLength]);
 
   useEffect(() => {
@@ -83,9 +105,6 @@ const ChaosManager = ({ equationFn, params }) => {
         }
       }
     }
-
-    trailPositionsRef.current = positions;
-    trailColorsRef.current = colors;
 
     const positionAttr = new THREE.BufferAttribute(positions, 3);
     positionAttr.setUsage(THREE.DynamicDrawUsage);
@@ -118,33 +137,28 @@ const ChaosManager = ({ equationFn, params }) => {
       trailIndexAttrRef.current = null;
       trailsGeometryRef.current.setDrawRange(0, 0);
     }
-
-    lastBreakSegmentRef.current = -1;
   }, [Npoints, trailLength]);
 
   useFrame(() => {
     if (freeze) return;
     const N = Npoints;
-    if (N === 0) return;
     const posX = posXRef.current;
     const posY = posYRef.current;
     const posZ = posZRef.current;
-    if (posX.length !== N) return;
     const eqOut = eqOutRef.current;
     const eqFn = equationRef.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
     const colorAttr = trailColorAttrRef.current;
-    const colors = trailColorsRef.current;
     const indexAttr = trailIndexAttrRef.current;
     const indexArray = indexAttr ? indexAttr.array : null;
     const dtStep = dt / SUBSTEPS;
-    const dr = highSpeedColor.r - lowSpeedColor.r;
-    const dg = highSpeedColor.g - lowSpeedColor.g;
-    const db = highSpeedColor.b - lowSpeedColor.b;
-    const lowColR = lowSpeedColor.r;
-    const lowColG = lowSpeedColor.g;
-    const lowColB = lowSpeedColor.b;
+    const lowR = lowSpeedColor.r;
+    const lowG = lowSpeedColor.g;
+    const lowB = lowSpeedColor.b;
+    const dr = highSpeedColor.r - lowR;
+    const dg = highSpeedColor.g - lowG;
+    const db = highSpeedColor.b - lowB;
     const shouldUpdateRange =
       frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
     frameCountRef.current += 1;
@@ -209,17 +223,17 @@ const ChaosManager = ({ equationFn, params }) => {
       }
       if (baseTrailHeadOffset >= 0) {
         const headOffset = baseTrailHeadOffset + i * 3;
-        trailPositionsRef.current[headOffset] = x;
-        trailPositionsRef.current[headOffset + 1] = y;
-        trailPositionsRef.current[headOffset + 2] = z;
+        positionAttr.array[headOffset] = x;
+        positionAttr.array[headOffset + 1] = y;
+        positionAttr.array[headOffset + 2] = z;
       }
       if (colorAttr) {
         const colorOffset = baseLastPointOffset + i * 3;
         const range = Math.max(1e-6, autoSpeedMaxRef.current - autoSpeedMinRef.current);
         const t = Math.min(1, Math.max(0, (speed - autoSpeedMinRef.current) / range));
-        colors[colorOffset] = lowColR + dr * t;
-        colors[colorOffset + 1] = lowColG + dg * t;
-        colors[colorOffset + 2] = lowColB + db * t;
+        colorAttr.array[colorOffset] = lowR + dr * t;
+        colorAttr.array[colorOffset + 1] = lowG + dg * t;
+        colorAttr.array[colorOffset + 2] = lowB + db * t;
       }
     }
     if (mesh) mesh.instanceMatrix.needsUpdate = true;
@@ -267,12 +281,7 @@ const ChaosManager = ({ equationFn, params }) => {
 
   return (
     <>
-      <instancedMesh
-        key={Npoints}
-        ref={sphereMeshRef}
-        args={[null, null, Npoints]}
-        frustumCulled={false}
-      >
+      <instancedMesh key={Npoints} ref={sphereMeshRef} args={[null, null, Npoints]}>
         <sphereGeometry args={[0.01, 16, 16]} />
         <meshBasicMaterial
           color={highSpeedColor}
@@ -281,7 +290,7 @@ const ChaosManager = ({ equationFn, params }) => {
           blending={THREE.AdditiveBlending}
         />
       </instancedMesh>
-      <lineSegments geometry={trailsGeometryRef.current} frustumCulled={false}>
+      <lineSegments geometry={trailsGeometryRef.current}>
         <lineBasicMaterial vertexColors={true} linewidth={2} />
       </lineSegments>
     </>

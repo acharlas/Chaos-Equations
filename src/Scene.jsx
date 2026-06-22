@@ -4,7 +4,7 @@ import { UnrealBloomPass } from "three-stdlib";
 import { folder, useControls } from "leva";
 import { AttractorManager } from "./chaos/attractors.jsx";
 import CameraAndControls from "./CameraResetButton.jsx";
-import { SIMULATION_SCHEMA } from "./chaos/simulationSchema.js";
+import { SIMULATION_SCHEMA } from "./chaos/ChaosManager.jsx";
 
 extend({ UnrealBloomPass });
 

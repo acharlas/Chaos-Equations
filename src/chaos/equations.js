@@ -103,20 +103,3 @@ export const ThomasEquation = (x, y, z, dt, { b }, out) => {
   out[1] = (-b * y + Math.sin(z)) * dt;
   out[2] = (-b * z + Math.sin(x)) * dt;
 };
-
-// ponytail: module-level scratch is safe — ChaosManager's useFrame loop is
-// synchronous, so rk4 calls finish before the next eq step (or next attractor).
-const _k1 = new Float32Array(3);
-const _k2 = new Float32Array(3);
-const _k3 = new Float32Array(3);
-const _k4 = new Float32Array(3);
-
-export const rk4Integrate = (eq, x, y, z, dt, params, out) => {
-  eq(x, y, z, dt, params, _k1);
-  eq(x + 0.5 * _k1[0], y + 0.5 * _k1[1], z + 0.5 * _k1[2], dt, params, _k2);
-  eq(x + 0.5 * _k2[0], y + 0.5 * _k2[1], z + 0.5 * _k2[2], dt, params, _k3);
-  eq(x + _k3[0], y + _k3[1], z + _k3[2], dt, params, _k4);
-  out[0] = (_k1[0] + 2 * _k2[0] + 2 * _k3[0] + _k4[0]) / 6;
-  out[1] = (_k1[1] + 2 * _k2[1] + 2 * _k3[1] + _k4[1]) / 6;
-  out[2] = (_k1[2] + 2 * _k2[2] + 2 * _k3[2] + _k4[2]) / 6;
-};
