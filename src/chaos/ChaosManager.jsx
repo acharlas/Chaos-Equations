@@ -64,7 +64,11 @@ const ChaosManager = ({ equationFn, params }) => {
   const posZRef = useRef(new Float32Array(0));
 
   useEffect(() => {
-    const N = Npoints;
+    initParticles(Npoints);
+    initTrailBuffers(Npoints, trailLength);
+  }, [Npoints, trailLength]);
+
+  const initParticles = (N) => {
     const posX = new Float32Array(N);
     const posY = new Float32Array(N);
     const posZ = new Float32Array(N);
@@ -77,22 +81,21 @@ const ChaosManager = ({ equationFn, params }) => {
     posYRef.current = posY;
     posZRef.current = posZ;
     autoRangeInitializedRef.current = false;
+  };
 
-    const totalPoints = N * trailLength;
-    const positions = new Float32Array(totalPoints * 3);
-    const colors = new Float32Array(totalPoints * 3);
-
-    if (trailLength > 0) {
-      for (let p = 0; p < N; p++) {
-        const x = posX[p];
-        const y = posY[p];
-        const z = posZ[p];
-        for (let i = 0; i < trailLength; i++) {
-          const base = (i * N + p) * 3;
-          positions[base] = x;
-          positions[base + 1] = y;
-          positions[base + 2] = z;
-        }
+  const initTrailBuffers = (N, trailLength) => {
+    const positions = new Float32Array(N * trailLength * 3);
+    const colors = new Float32Array(N * trailLength * 3);
+    const posX = posXRef.current;
+    for (let p = 0; p < N; p++) {
+      const x = posX[p];
+      const y = posYRef.current[p];
+      const z = posZRef.current[p];
+      for (let i = 0; i < trailLength; i++) {
+        const base = (i * N + p) * 3;
+        positions[base] = x;
+        positions[base + 1] = y;
+        positions[base + 2] = z;
       }
     }
 
@@ -127,7 +130,7 @@ const ChaosManager = ({ equationFn, params }) => {
       trailIndexAttrRef.current = null;
       trailsGeometryRef.current.setDrawRange(0, 0);
     }
-  }, [Npoints, trailLength]);
+  };
 
   useFrame(() => {
     if (freeze) return;
@@ -195,7 +198,7 @@ const ChaosManager = ({ equationFn, params }) => {
       posX[i] = x;
       posY[i] = y;
       posZ[i] = z;
-      const speed = Math.sqrt(eqOut[0] ** 2 + eqOut[1] ** 2 + eqOut[2] ** 2) / dtStep;
+      const speed = Math.hypot(eqOut[0], eqOut[1], eqOut[2]) / dtStep;
       if (shouldUpdateRange && Number.isFinite(speed) && i % sampleStride === 0) {
         speedList.push(speed);
       }
@@ -242,20 +245,15 @@ const ChaosManager = ({ equationFn, params }) => {
       autoSpeedMinRef.current = 0;
       autoSpeedMaxRef.current = 1;
     }
-    if (positionAttr && baseTrailHeadOffset >= 0) {
-      positionAttr.clearUpdateRanges();
-      positionAttr.addUpdateRange(baseTrailHeadOffset, N * 3);
-      positionAttr.needsUpdate = true;
-    }
-    if (indexAttr && minIndexUpdate !== Infinity) {
-      indexAttr.clearUpdateRanges();
-      indexAttr.addUpdateRange(minIndexUpdate, maxIndexUpdate - minIndexUpdate);
-      indexAttr.needsUpdate = true;
-    }
-    if (colorAttr) {
-      colorAttr.clearUpdateRanges();
-      colorAttr.addUpdateRange(lastPointOffset, N * 3);
-      colorAttr.needsUpdate = true;
+    for (const [attr, offset, count, gate] of [
+      [positionAttr, baseTrailHeadOffset, N * 3, baseTrailHeadOffset >= 0],
+      [indexAttr, minIndexUpdate, maxIndexUpdate - minIndexUpdate, minIndexUpdate !== Infinity],
+      [colorAttr, lastPointOffset, N * 3, true],
+    ]) {
+      if (!attr || !gate) continue;
+      attr.clearUpdateRanges();
+      attr.addUpdateRange(offset, count);
+      attr.needsUpdate = true;
     }
   });
 

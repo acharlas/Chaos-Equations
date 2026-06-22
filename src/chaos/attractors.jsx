@@ -19,18 +19,16 @@ import {
   ThomasEquation,
 } from "./equations.js";
 
-const _k1 = new Float32Array(3);
-const _k2 = new Float32Array(3);
-const _k3 = new Float32Array(3);
-const _k4 = new Float32Array(3);
+const _k = new Float32Array(12);
 const rk4RabinovichFabrikant = (x, y, z, dt, p, out) => {
-  RabinovichFabrikantEquation(x, y, z, dt, p, _k1);
-  RabinovichFabrikantEquation(x + 0.5 * _k1[0], y + 0.5 * _k1[1], z + 0.5 * _k1[2], dt, p, _k2);
-  RabinovichFabrikantEquation(x + 0.5 * _k2[0], y + 0.5 * _k2[1], z + 0.5 * _k2[2], dt, p, _k3);
-  RabinovichFabrikantEquation(x + _k3[0], y + _k3[1], z + _k3[2], dt, p, _k4);
-  out[0] = (_k1[0] + 2 * _k2[0] + 2 * _k3[0] + _k4[0]) / 6;
-  out[1] = (_k1[1] + 2 * _k2[1] + 2 * _k3[1] + _k4[1]) / 6;
-  out[2] = (_k1[2] + 2 * _k2[2] + 2 * _k3[2] + _k4[2]) / 6;
+  const k1 = _k, k2 = _k.subarray(3, 6), k3 = _k.subarray(6, 9), k4 = _k.subarray(9, 12);
+  RabinovichFabrikantEquation(x, y, z, dt, p, k1);
+  RabinovichFabrikantEquation(x + 0.5 * k1[0], y + 0.5 * k1[1], z + 0.5 * k1[2], dt, p, k2);
+  RabinovichFabrikantEquation(x + 0.5 * k2[0], y + 0.5 * k2[1], z + 0.5 * k2[2], dt, p, k3);
+  RabinovichFabrikantEquation(x + k3[0], y + k3[1], z + k3[2], dt, p, k4);
+  out[0] = (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6;
+  out[1] = (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6;
+  out[2] = (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]) / 6;
 };
 
 export const ATTRACTORS = [
@@ -39,7 +37,7 @@ export const ATTRACTORS = [
     b: { value: 28, min: 15, max: 45, step: 1 },
     c: { value: 2.67, min: 1, max: 5, step: 0.01 },
   } },
-  { id: "Halvorsen", group: "Classic", scale: 1, eq: HalvorsenEquation, params: {
+  { id: "Halvorsen", group: "Classic", scale: 1, eq: HalvorsenEquation, defaultEnabled: true, params: {
     a: { value: 1.4, min: 1.0, max: 2.5, step: 0.05 },
   } },
   { id: "Rossler", group: "Classic", scale: 2, eq: RosslerEquation, params: {
@@ -115,7 +113,7 @@ const schema = Object.fromEntries(
       Object.fromEntries(
         ATTRACTORS.filter((a) => a.group === g).map((a) => [
           a.id,
-          { value: a.id === "Halvorsen", label: a.id.replace(/([a-z])([A-Z])/g, "$1-$2") },
+          { value: !!a.defaultEnabled, label: a.id.replace(/([a-z])([A-Z])/g, "$1-$2") },
         ]),
       ),
       { collapsed: true },
@@ -132,13 +130,12 @@ export const AttractorManager = ({ globalScale }) => {
     const n = active.length;
     if (n === 0) return [];
     if (n === 1) return [[0, 0, 0]];
-    const SPACING = 200;
     const cols = Math.ceil(Math.sqrt(n));
     const rows = Math.ceil(n / cols);
     return Array.from({ length: n }, (_, i) => [
-      ((i % cols) - (cols - 1) / 2) * SPACING,
+      ((i % cols) - (cols - 1) / 2) * 200,
       0,
-      (Math.floor(i / cols) - (rows - 1) / 2) * SPACING,
+      (Math.floor(i / cols) - (rows - 1) / 2) * 200,
     ]);
   }, [active.length]);
   return (
