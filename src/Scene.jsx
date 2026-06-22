@@ -13,14 +13,9 @@ const VIEW_SCHEMA = {
   Effects: folder(
     {
       bloom: { value: false, label: "Bloom" },
-      "Bloom Settings": folder(
-        {
-          bloom_threshold: { value: 0.35, min: 0, max: 1, step: 0.01, label: "Threshold" },
-          bloom_strength: { value: 0.9, min: 0, max: 3, step: 0.01, label: "Strength" },
-          bloom_radius: { value: 0.6, min: 0, max: 1.2, step: 0.01, label: "Radius" },
-        },
-        { collapsed: true },
-      ),
+      bloom_threshold: { value: 0.35, min: 0, max: 1, step: 0.01, label: "Threshold" },
+      bloom_strength: { value: 0.9, min: 0, max: 3, step: 0.01, label: "Strength" },
+      bloom_radius: { value: 0.6, min: 0, max: 1.2, step: 0.01, label: "Radius" },
     },
     { collapsed: true, order: -3 },
   ),

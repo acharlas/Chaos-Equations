@@ -9,10 +9,6 @@ const CameraAndControls = () => {
   useControls({
     resetCamera: button(() => {
       camera.position.set(-140, -140, -160);
-      if (camera.isOrthographicCamera) {
-        camera.zoom = 1;
-        camera.updateProjectionMatrix();
-      }
       camera.lookAt(0, 0, 0);
       controlsRef.current?.reset?.();
     }, { label: "Reset Camera" }),

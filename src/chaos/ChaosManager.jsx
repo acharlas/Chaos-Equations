@@ -77,23 +77,18 @@ const ChaosManager = ({ equationFn, params }) => {
     posYRef.current = posY;
     posZRef.current = posZ;
     autoRangeInitializedRef.current = false;
-  }, [Npoints, trailLength]);
 
-  useEffect(() => {
-    const totalPoints = Npoints * trailLength;
+    const totalPoints = N * trailLength;
     const positions = new Float32Array(totalPoints * 3);
     const colors = new Float32Array(totalPoints * 3);
 
     if (trailLength > 0) {
-      const px = posXRef.current;
-      const py = posYRef.current;
-      const pz = posZRef.current;
-      for (let p = 0; p < Npoints; p++) {
-        const x = px[p];
-        const y = py[p];
-        const z = pz[p];
+      for (let p = 0; p < N; p++) {
+        const x = posX[p];
+        const y = posY[p];
+        const z = posZ[p];
         for (let i = 0; i < trailLength; i++) {
-          const base = (i * Npoints + p) * 3;
+          const base = (i * N + p) * 3;
           positions[base] = x;
           positions[base + 1] = y;
           positions[base + 2] = z;
@@ -111,14 +106,14 @@ const ChaosManager = ({ equationFn, params }) => {
     trailsGeometryRef.current.setAttribute("color", colorAttr);
     trailColorAttrRef.current = colorAttr;
 
-    const segmentCount = trailLength > 1 ? trailLength * Npoints : 0;
+    const segmentCount = trailLength > 1 ? trailLength * N : 0;
     if (segmentCount > 0) {
       const indexArray = new Uint32Array(segmentCount * 2);
       let idx = 0;
-      for (let p = 0; p < Npoints; p++) {
+      for (let p = 0; p < N; p++) {
         for (let i = 0; i < trailLength; i++) {
-          const a = i * Npoints + p;
-          const b = ((i + 1) % trailLength) * Npoints + p;
+          const a = i * N + p;
+          const b = ((i + 1) % trailLength) * N + p;
           indexArray[idx++] = a;
           indexArray[idx++] = b;
         }
@@ -159,12 +154,12 @@ const ChaosManager = ({ equationFn, params }) => {
       trailLength > 0 ? (globalWriteIndexRef.current + 1) % trailLength : -1;
     const timeWrapSegment = nextWriteIndex;
     const lastPointOffset =
-      (nextWriteIndex === 0 ? trailLength - 1 : nextWriteIndex - 1) * N * 3;
+      ((nextWriteIndex - 1 + trailLength) % trailLength) * N * 3;
     const baseTrailHeadOffset = nextWriteIndex >= 0 ? nextWriteIndex * N * 3 : -1;
     const speedList = [];
     let minIndexUpdate = Infinity;
     let maxIndexUpdate = -Infinity;
-    if (indexAttr && trailLength > 1 && lastBreakSegmentRef.current !== timeWrapSegment) {
+    if (indexAttr && lastBreakSegmentRef.current !== timeWrapSegment) {
       const prev = lastBreakSegmentRef.current;
       if (prev >= 0) {
         for (let p = 0; p < N; p++) {
@@ -247,17 +242,20 @@ const ChaosManager = ({ equationFn, params }) => {
       autoSpeedMinRef.current = 0;
       autoSpeedMaxRef.current = 1;
     }
-    const updates = [
-      pos && baseTrailHeadOffset >= 0 && [positionAttr, baseTrailHeadOffset, N * 3],
-      indexAttr && minIndexUpdate !== Infinity && [indexAttr, minIndexUpdate, maxIndexUpdate - minIndexUpdate],
-      col && [colorAttr, lastPointOffset, N * 3],
-    ];
-    for (const u of updates) {
-      if (!u) continue;
-      const [attr, offset, count] = u;
-      attr.clearUpdateRanges();
-      attr.addUpdateRange(offset, count);
-      attr.needsUpdate = true;
+    if (positionAttr && baseTrailHeadOffset >= 0) {
+      positionAttr.clearUpdateRanges();
+      positionAttr.addUpdateRange(baseTrailHeadOffset, N * 3);
+      positionAttr.needsUpdate = true;
+    }
+    if (indexAttr && minIndexUpdate !== Infinity) {
+      indexAttr.clearUpdateRanges();
+      indexAttr.addUpdateRange(minIndexUpdate, maxIndexUpdate - minIndexUpdate);
+      indexAttr.needsUpdate = true;
+    }
+    if (colorAttr) {
+      colorAttr.clearUpdateRanges();
+      colorAttr.addUpdateRange(lastPointOffset, N * 3);
+      colorAttr.needsUpdate = true;
     }
   });
 

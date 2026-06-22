@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   server: {
     port: 3000,
-    host: process.env.DOCKER ? true : false,
+    host: !!process.env.DOCKER,
     watch: process.env.DOCKER ? { usePolling: true } : undefined,
   },
   plugins: [react()],
