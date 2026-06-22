@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { folder, useControls } from "leva";
+import { useFreeze } from "./freezeState";
 
 const BASE_DT = 0.003;
 const SUBSTEPS = 2;
@@ -24,7 +25,6 @@ export const SIMULATION_SCHEMA = {
       },
       globalScale: { value: 5, min: 2, max: 12, step: 0.1, label: "Global Scale" },
       timeScale: { value: 1.0, min: 0.25, max: 4, step: 0.05, label: "Time Scale" },
-      freeze: { value: false, label: "Freeze" },
     },
     { collapsed: false, order: -5 },
   ),
@@ -39,8 +39,8 @@ export const SIMULATION_SCHEMA = {
 
 const ChaosManager = ({ equationFn, params }) => {
   const sim = useControls(SIMULATION_SCHEMA);
-  const { Npoints, trailLength, timeScale, lowSpeedHex, highSpeedHex, freeze } =
-    sim;
+  const { Npoints, trailLength, timeScale, lowSpeedHex, highSpeedHex } = sim;
+  const freeze = useFreeze();
   const dt = BASE_DT * timeScale;
 
   const lowSpeedColor = new THREE.Color(lowSpeedHex);
