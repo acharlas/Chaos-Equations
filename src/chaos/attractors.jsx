@@ -108,9 +108,8 @@ export const ATTRACTORS = [
   } },
 ];
 
-const groups = [...new Set(ATTRACTORS.map((a) => a.group))];
 const schema = Object.fromEntries(
-  groups.map((g) => [
+  [...new Set(ATTRACTORS.map((a) => a.group))].map((g) => [
     g,
     folder(
       Object.fromEntries(
@@ -144,26 +143,18 @@ export const AttractorManager = ({ globalScale }) => {
   }, [active.length]);
   return (
     <>
-      {active.map((record, i) => (
-        <AttractorView
-          key={record.id}
-          record={record}
-          position={positions[i]}
-          globalScale={globalScale}
-        />
-      ))}
+      {active.map((record, i) => {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const params = useControls({
+          [record.id]: folder(record.params, { collapsed: true, order: -1 }),
+        });
+        const s = globalScale * record.scale;
+        return (
+          <group key={record.id} scale={[s, s, s]} position={positions[i]}>
+            <ChaosManager equationFn={record.eq} params={params} />
+          </group>
+        );
+      })}
     </>
-  );
-};
-
-const AttractorView = ({ record, position, globalScale }) => {
-  const params = useControls({
-    [record.id]: folder(record.params, { collapsed: true, order: -1 }),
-  });
-  const s = globalScale * record.scale;
-  return (
-    <group scale={[s, s, s]} position={position}>
-      <ChaosManager equationFn={record.eq} params={params} />
-    </group>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { folder, useControls } from "leva";
@@ -43,8 +43,8 @@ const ChaosManager = ({ equationFn, params }) => {
     sim;
   const dt = BASE_DT * timeScale;
 
-  const lowSpeedColor = useMemo(() => new THREE.Color(lowSpeedHex), [lowSpeedHex]);
-  const highSpeedColor = useMemo(() => new THREE.Color(highSpeedHex), [highSpeedHex]);
+  const lowSpeedColor = new THREE.Color(lowSpeedHex);
+  const highSpeedColor = new THREE.Color(highSpeedHex);
 
   const sphereMeshRef = useRef();
   const tempMatrix = useRef(new THREE.Matrix4());
@@ -144,34 +144,27 @@ const ChaosManager = ({ equationFn, params }) => {
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
     const colorAttr = trailColorAttrRef.current;
+    const pos = positionAttr && positionAttr.array;
+    const col = colorAttr && colorAttr.array;
     const indexAttr = trailIndexAttrRef.current;
     const indexArray = indexAttr ? indexAttr.array : null;
     const dtStep = dt / SUBSTEPS;
-    const lowR = lowSpeedColor.r;
-    const lowG = lowSpeedColor.g;
-    const lowB = lowSpeedColor.b;
-    const dr = highSpeedColor.r - lowR;
-    const dg = highSpeedColor.g - lowG;
-    const db = highSpeedColor.b - lowB;
     const shouldUpdateRange =
       frameCountRef.current % SPEED_RANGE_UPDATE_INTERVAL === 0;
     frameCountRef.current += 1;
     const sampleStride = shouldUpdateRange
       ? Math.max(1, Math.floor(N / MAX_SPEED_SAMPLES))
       : 1;
-    const currentWriteIndex = trailLength > 0 ? globalWriteIndexRef.current : -1;
     const nextWriteIndex =
-      trailLength > 0 ? (currentWriteIndex + 1) % trailLength : -1;
-    const lastIndex = nextWriteIndex === 0 ? trailLength - 1 : nextWriteIndex - 1;
-    const hasIndexBreak = indexAttr !== null && trailLength > 1;
-    const baseLastPointIndex = lastIndex * N;
-    const baseLastPointOffset = baseLastPointIndex * 3;
-    const baseTrailHeadOffset = nextWriteIndex >= 0 ? nextWriteIndex * N * 3 : -1;
+      trailLength > 0 ? (globalWriteIndexRef.current + 1) % trailLength : -1;
     const timeWrapSegment = nextWriteIndex;
+    const lastPointOffset =
+      (nextWriteIndex === 0 ? trailLength - 1 : nextWriteIndex - 1) * N * 3;
+    const baseTrailHeadOffset = nextWriteIndex >= 0 ? nextWriteIndex * N * 3 : -1;
     const speedList = [];
     let minIndexUpdate = Infinity;
     let maxIndexUpdate = -Infinity;
-    if (hasIndexBreak && lastBreakSegmentRef.current !== timeWrapSegment) {
+    if (indexAttr && trailLength > 1 && lastBreakSegmentRef.current !== timeWrapSegment) {
       const prev = lastBreakSegmentRef.current;
       if (prev >= 0) {
         for (let p = 0; p < N; p++) {
@@ -215,28 +208,28 @@ const ChaosManager = ({ equationFn, params }) => {
         tempMatrix.current.setPosition(x, y, z);
         mesh.setMatrixAt(i, tempMatrix.current);
       }
-      if (baseTrailHeadOffset >= 0) {
+      if (pos && baseTrailHeadOffset >= 0) {
         const headOffset = baseTrailHeadOffset + i * 3;
-        positionAttr.array[headOffset] = x;
-        positionAttr.array[headOffset + 1] = y;
-        positionAttr.array[headOffset + 2] = z;
+        pos[headOffset] = x;
+        pos[headOffset + 1] = y;
+        pos[headOffset + 2] = z;
       }
-      if (colorAttr) {
-        const colorOffset = baseLastPointOffset + i * 3;
+      if (col) {
+        const colorOffset = lastPointOffset + i * 3;
         const range = Math.max(1e-6, autoSpeedMaxRef.current - autoSpeedMinRef.current);
         const t = Math.min(1, Math.max(0, (speed - autoSpeedMinRef.current) / range));
-        colorAttr.array[colorOffset] = lowR + dr * t;
-        colorAttr.array[colorOffset + 1] = lowG + dg * t;
-        colorAttr.array[colorOffset + 2] = lowB + db * t;
+        col[colorOffset] = lowSpeedColor.r + (highSpeedColor.r - lowSpeedColor.r) * t;
+        col[colorOffset + 1] = lowSpeedColor.g + (highSpeedColor.g - lowSpeedColor.g) * t;
+        col[colorOffset + 2] = lowSpeedColor.b + (highSpeedColor.b - lowSpeedColor.b) * t;
       }
     }
     if (mesh) mesh.instanceMatrix.needsUpdate = true;
     if (nextWriteIndex >= 0) globalWriteIndexRef.current = nextWriteIndex;
     if (shouldUpdateRange && speedList.length > 0) {
-      const sorted = speedList.slice().sort((a, b) => a - b);
-      const last = sorted.length - 1;
-      const lo = sorted[Math.floor(last * SPEED_PCT_LO)];
-      const hi = sorted[Math.floor(last * SPEED_PCT_HI)];
+      speedList.sort((a, b) => a - b);
+      const last = speedList.length - 1;
+      const lo = speedList[Math.floor(last * SPEED_PCT_LO)];
+      const hi = speedList[Math.floor(last * SPEED_PCT_HI)];
       if (!autoRangeInitializedRef.current) {
         autoSpeedMinRef.current = lo;
         autoSpeedMaxRef.current = hi;
@@ -255,9 +248,9 @@ const ChaosManager = ({ equationFn, params }) => {
       autoSpeedMaxRef.current = 1;
     }
     const updates = [
-      positionAttr && baseTrailHeadOffset >= 0 && [positionAttr, baseTrailHeadOffset, N * 3],
+      pos && baseTrailHeadOffset >= 0 && [positionAttr, baseTrailHeadOffset, N * 3],
       indexAttr && minIndexUpdate !== Infinity && [indexAttr, minIndexUpdate, maxIndexUpdate - minIndexUpdate],
-      colorAttr && [colorAttr, baseLastPointOffset, N * 3],
+      col && [colorAttr, lastPointOffset, N * 3],
     ];
     for (const u of updates) {
       if (!u) continue;
