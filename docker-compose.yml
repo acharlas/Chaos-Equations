@@ -1,6 +1,5 @@
 services:
   vite-app:
-    container_name: vite
     build: .
     ports:
       - "3000:3000"

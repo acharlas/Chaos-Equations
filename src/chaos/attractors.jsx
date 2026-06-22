@@ -19,8 +19,6 @@ import {
   ThomasEquation,
 } from "./equations.js";
 
-const labelFor = (id) => id.replace(/([a-z])([A-Z])/g, "$1-$2");
-
 const _k1 = new Float32Array(3);
 const _k2 = new Float32Array(3);
 const _k3 = new Float32Array(3);
@@ -118,7 +116,7 @@ const schema = Object.fromEntries(
       Object.fromEntries(
         ATTRACTORS.filter((a) => a.group === g).map((a) => [
           a.id,
-          { value: a.id === "Halvorsen", label: labelFor(a.id) },
+          { value: a.id === "Halvorsen", label: a.id.replace(/([a-z])([A-Z])/g, "$1-$2") },
         ]),
       ),
       { collapsed: true },

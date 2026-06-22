@@ -5,31 +5,16 @@
 # Chaos Attractors Simulation
 [![React][React.js]][React-url] [![Three][Three.js]][Three-url] ![build]
 
-A modern simulation engine for chaotic attractors in your browser. Chaos‐Equations renders complex chaotic systems (like the Lorenz and Halvorsen attractors) using react‑three‑fiber and Leva controls, letting you explore chaos in real time.
-
-## Features
-
-- **Modular Architecture:**  
-  Each attractor is implemented as a separate module. Shared components like `ChaosManager`, `Particle`, and `AttractorWrapper` help reduce code duplication and improve maintainability.
-
-- **Dynamic Simulation Controls:**  
-  Leva controls allow you to adjust simulation parameters (e.g., time step, number of particles, trail length, global scaling) in real-time. Dedicated controls let you freeze the simulation and restart it from the beginning.
-
-- **Updated Camera Setup:**  
-  Tuned default camera settings for a consistent initial view.
-
-- **Postprocessing Effects:**  
-  Includes postprocessing effects (such as UnrealBloomPass) to produce a glowing, vibrant visualization of attractor tips.
+Real-time chaotic-attractor visualiser running in the browser (Lorenz, Halvorsen, Thomas, …), built on `react-three-fiber` with `Leva` for the controls.
 
 ## Controls
 
-- `Attractor`: pick the active system from the dropdown.
-- `Simulation`: `Particles`, `Trail Length`, `Global Scale`, `Time Step`, `Substeps`.
-- `Colors`: `Low Speed Color`, `High Speed Color`, `Speed Color Boost`.
-- `Performance`: `Render Resolution`, `Trail Budget (particles × trail length)`.
-- `Effects`: toggle `Bloom` and tune `Threshold`, `Strength`, `Radius`.
-- `View`: `Show Stats`, `Show Stars`.
-- Actions: `freeze` / `restart` buttons appear inside each attractor's control folder, plus `Reset Camera`.
+- `Attractors`: toggle any subset of the 15 systems.
+- `Simulation`: `Particles`, `Trail Length`, `Global Scale`, `Time Scale`, `Freeze`.
+- `Colors`: `Low Speed Color`, `High Speed Color`.
+- `Effects`: `Bloom` + `Threshold` / `Strength` / `Radius`.
+- `View`: `Show Stars`.
+- Actions: `Reset Camera`.
 
 ## Screenshots
 
@@ -39,59 +24,41 @@ A modern simulation engine for chaotic attractors in your browser. Chaos‐Equat
 
 ## Installation
 
-1. **Clone the repository:**
+```sh
+git clone https://github.com/acharlas/Chaos-Equations.git
+cd Chaos-Equations
+npm install
+npm run dev          # http://localhost:3000
+```
 
-   ```sh
-   git clone https://github.com/acharlas/Chaos-Equations.git
-   cd Chaos-Equations
-   ```
+Or with Docker Compose:
 
-2. **Install and run locally (recommended):**
+```sh
+docker compose up --build
+```
 
-   ```sh
-   npm install
-   npm run dev
-   ```
+Sanity checks:
 
-   Open your browser and navigate to http://localhost:3000 to see the simulation.
+```sh
+npm run lint
+npm test
+npm run build
+```
 
-3. **Or build and run with Docker Compose:**
+## Architecture
 
-   ```sh
-   docker-compose up --build
-   ```
+- `src/chaos/equations.js` — pure ODE kernels (one per attractor). Rabinovich–Fabrikant is the only RK4-attractor.
+- `src/chaos/attractors.jsx` — `ATRACTORS` table (id, group, scale, equation, leva params) + `AttractorView` + `AttractorManager`. Per-attractor parameter changes only require editing the table.
+- `src/chaos/ChaosManager.jsx` — the simulation: per-frame integration in a `useFrame` hook, SoA particle buffers, instanced spheres + line-segments for the trails, automatic speed→colour range, moving wrap-break on the index buffer.
+- `src/Scene.jsx` — `<Canvas>` wrapper, leva schemas, bloom + stars + camera controls.
+- `src/App.jsx` — `<Leva>` panel + `<Scene>` + footer with author links.
 
-   Open your browser and navigate to http://localhost:3000 to see the simulation.
+## License
 
-4. **Optional sanity checks:**
-
-   ```sh
-   npm run lint
-   npm run build
-   ```
-
-## Project Overview
-
-- **AttractorManager:**  
-  Provides a UI control (via Leva) to switch between multiple attractors.
-
-- **Attractor components:**  
-  Each attractor component sets up its own parameters (merged with shared controls), binds its specific chaotic equation, and passes the configuration to the ChaosManager.
-
-- **ChaosManager & Particle:**  
-  The ChaosManager spawns multiple particles, each updating its position according to the provided chaotic equation. Each particle renders a trail with a smooth gradient and a glowing tip (a customizable sphere) whose size can be adjusted.
-
-- **AttractorWrapper:**  
-  Wraps attractor components in a Three.js group that applies a global scaling factor.
-
-Feel free to explore and tweak the controls in the Leva panel to see how different parameters affect the simulation. Enjoy your chaotic visualizations!
+MIT © 2026 Axel Charlassier. See `LICENSE`.
 
 [build]: https://img.shields.io/github/actions/workflow/status/acharlas/Chaos-Equations/deploy.yml
 [React.js]: https://img.shields.io/badge/-ReactJs-61DAFB?logo=react&logoColor=white&style=for-the-badge
 [React-url]: https://react.dev/
 [Three.js]: https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white
 [Three-url]: https://threejs.org/
-
-## License
-
-MIT © 2026 Axel Charlassier. See `LICENSE`.

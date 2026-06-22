@@ -58,15 +58,10 @@ const ChaosManager = ({ equationFn, params }) => {
   const autoSpeedMaxRef = useRef(1);
   const autoRangeInitializedRef = useRef(false);
   const frameCountRef = useRef(0);
-  const equationRef = useRef(equationFn);
   const eqOutRef = useRef(new Float32Array(3));
   const posXRef = useRef(new Float32Array(0));
   const posYRef = useRef(new Float32Array(0));
   const posZRef = useRef(new Float32Array(0));
-
-  useEffect(() => {
-    equationRef.current = equationFn;
-  }, [equationFn]);
 
   useEffect(() => {
     const N = Npoints;
@@ -146,7 +141,6 @@ const ChaosManager = ({ equationFn, params }) => {
     const posY = posYRef.current;
     const posZ = posZRef.current;
     const eqOut = eqOutRef.current;
-    const eqFn = equationRef.current;
     const mesh = sphereMeshRef.current;
     const positionAttr = trailPositionAttrRef.current;
     const colorAttr = trailColorAttrRef.current;
@@ -205,7 +199,7 @@ const ChaosManager = ({ equationFn, params }) => {
       let y = posY[i];
       let z = posZ[i];
       for (let s = 0; s < SUBSTEPS; s++) {
-        eqFn(x, y, z, dtStep, params, eqOut);
+        equationFn(x, y, z, dtStep, params, eqOut);
         x += eqOut[0];
         y += eqOut[1];
         z += eqOut[2];
@@ -260,22 +254,17 @@ const ChaosManager = ({ equationFn, params }) => {
       autoSpeedMinRef.current = 0;
       autoSpeedMaxRef.current = 1;
     }
-    if (positionAttr && baseTrailHeadOffset >= 0) {
-      const updateEnd = baseTrailHeadOffset + (N - 1) * 3 + 3;
-      positionAttr.clearUpdateRanges();
-      positionAttr.addUpdateRange(baseTrailHeadOffset, updateEnd - baseTrailHeadOffset);
-      positionAttr.needsUpdate = true;
-    }
-    if (indexAttr && minIndexUpdate !== Infinity) {
-      indexAttr.clearUpdateRanges();
-      indexAttr.addUpdateRange(minIndexUpdate, maxIndexUpdate - minIndexUpdate);
-      indexAttr.needsUpdate = true;
-    }
-    if (colorAttr) {
-      const updateEnd = baseLastPointOffset + (N - 1) * 3 + 3;
-      colorAttr.clearUpdateRanges();
-      colorAttr.addUpdateRange(baseLastPointOffset, updateEnd - baseLastPointOffset);
-      colorAttr.needsUpdate = true;
+    const updates = [
+      positionAttr && baseTrailHeadOffset >= 0 && [positionAttr, baseTrailHeadOffset, N * 3],
+      indexAttr && minIndexUpdate !== Infinity && [indexAttr, minIndexUpdate, maxIndexUpdate - minIndexUpdate],
+      colorAttr && [colorAttr, baseLastPointOffset, N * 3],
+    ];
+    for (const u of updates) {
+      if (!u) continue;
+      const [attr, offset, count] = u;
+      attr.clearUpdateRanges();
+      attr.addUpdateRange(offset, count);
+      attr.needsUpdate = true;
     }
   });
 

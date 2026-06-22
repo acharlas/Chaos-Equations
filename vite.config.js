@@ -5,9 +5,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    watch: {
-      usePolling: true,
-    },
+    watch: process.env.DOCKER ? { usePolling: true } : undefined,
   },
   plugins: [react()],
   base: "/Chaos-Equations",
