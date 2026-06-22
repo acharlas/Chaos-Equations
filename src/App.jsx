@@ -1,4 +1,6 @@
 import { Leva } from "leva";
+import linkedinSvg from "/linkedin.svg";
+import githubSvg from "/github.svg";
 import Scene from "./Scene";
 import "./App.css";
 
@@ -7,13 +9,13 @@ const ICON = {
     href: "https://www.linkedin.com/in/axel-charlassier/",
     label: "Axel Charlassier on LinkedIn",
     title: "Axel Charlassier — LinkedIn",
-    src: "/linkedin.svg",
+    src: linkedinSvg,
   },
   GitHub: {
     href: "https://github.com/acharlas/Chaos-Equations",
     label: "Chaos-Equations on GitHub",
     title: "Chaos-Equations — GitHub",
-    src: "/github.svg",
+    src: githubSvg,
   },
 };
 
