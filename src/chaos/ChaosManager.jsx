@@ -86,11 +86,13 @@ const ChaosManager = ({ equationFn, params }) => {
   const initTrailBuffers = (N, trailLength) => {
     const positions = new Float32Array(N * trailLength * 3);
     const colors = new Float32Array(N * trailLength * 3);
-    const posX = posXRef.current;
+    const pX = posXRef.current;
+    const pY = posYRef.current;
+    const pZ = posZRef.current;
     for (let p = 0; p < N; p++) {
-      const x = posX[p];
-      const y = posYRef.current[p];
-      const z = posZRef.current[p];
+      const x = pX[p];
+      const y = pY[p];
+      const z = pZ[p];
       for (let i = 0; i < trailLength; i++) {
         const base = (i * N + p) * 3;
         positions[base] = x;
@@ -202,10 +204,7 @@ const ChaosManager = ({ equationFn, params }) => {
       if (shouldUpdateRange && Number.isFinite(speed) && i % sampleStride === 0) {
         speedList.push(speed);
       }
-      if (mesh) {
-        tempMatrix.current.setPosition(x, y, z);
-        mesh.setMatrixAt(i, tempMatrix.current);
-      }
+      mesh?.setMatrixAt(i, tempMatrix.current.setPosition(x, y, z));
       if (pos && baseTrailHeadOffset >= 0) {
         const headOffset = baseTrailHeadOffset + i * 3;
         pos[headOffset] = x;
@@ -228,7 +227,8 @@ const ChaosManager = ({ equationFn, params }) => {
       const last = speedList.length - 1;
       const lo = speedList[Math.floor(last * SPEED_PCT_LO)];
       const hi = speedList[Math.floor(last * SPEED_PCT_HI)];
-      if (!autoRangeInitializedRef.current) {
+      const initialized = autoRangeInitializedRef.current;
+      if (!initialized) {
         autoSpeedMinRef.current = lo;
         autoSpeedMaxRef.current = hi;
         autoRangeInitializedRef.current = true;

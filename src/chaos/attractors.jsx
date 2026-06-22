@@ -106,20 +106,18 @@ export const ATTRACTORS = [
   } },
 ];
 
-const schema = Object.fromEntries(
-  [...new Set(ATTRACTORS.map((a) => a.group))].map((g) => [
-    g,
-    folder(
-      Object.fromEntries(
-        ATTRACTORS.filter((a) => a.group === g).map((a) => [
-          a.id,
-          { value: !!a.defaultEnabled, label: a.id.replace(/([a-z])([A-Z])/g, "$1-$2") },
-        ]),
-      ),
-      { collapsed: true },
+const schema = {};
+for (const [group, items] of Object.entries(Object.groupBy(ATTRACTORS, (a) => a.group))) {
+  schema[group] = folder(
+    Object.fromEntries(
+      items.map((a) => [
+        a.id,
+        { value: !!a.defaultEnabled, label: a.id.replace(/([a-z])([A-Z])/g, "$1-$2") },
+      ]),
     ),
-  ]),
-);
+    { collapsed: true },
+  );
+}
 
 export const AttractorManager = ({ globalScale }) => {
   const selections = useControls({
@@ -128,7 +126,6 @@ export const AttractorManager = ({ globalScale }) => {
   const active = ATTRACTORS.filter((a) => selections?.[a.id]);
   const positions = useMemo(() => {
     const n = active.length;
-    if (n === 0) return [];
     if (n === 1) return [[0, 0, 0]];
     const cols = Math.ceil(Math.sqrt(n));
     const rows = Math.ceil(n / cols);
