@@ -1,29 +1,22 @@
-import React from "react";
-import { useControls, button } from "leva";
+import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { button, useControls } from "leva";
+import { freezeStore } from "./chaos/freezeState";
 
-const CameraResetButton = ({ controlsRef }) => {
+const CameraAndControls = () => {
   const { camera } = useThree();
-
-  useControls({
-    resetCamera: button(
-      () => {
-        camera.position.set(-140, -140, -160);
-        if (camera.isOrthographicCamera) {
-          camera.zoom = 1;
-          camera.updateProjectionMatrix();
-        }
-        camera.lookAt(0, 0, 0);
-        console.log("Camera reset to:", camera.position);
-        if (controlsRef && controlsRef.current && controlsRef.current.reset) {
-          controlsRef.current.reset();
-        }
-      },
-      { label: "Reset Camera" }
-    ),
+  const controlsRef = useRef();
+  const { freeze } = useControls({
+    freeze: { value: false, label: "Freeze" },
+    resetCamera: button(() => {
+      camera.position.set(-140, -140, -160);
+      camera.lookAt(0, 0, 0);
+      controlsRef.current?.reset?.();
+    }, { label: "Reset Camera" }),
   });
-
-  return null;
+  useEffect(() => freezeStore.set(freeze), [freeze]);
+  return <OrbitControls ref={controlsRef} />;
 };
 
-export default CameraResetButton;
+export default CameraAndControls;

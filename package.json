@@ -1,6 +1,5 @@
 {
   "name": "chaos-equations-app-js",
-  "homepage": "https://acharlas.github.io/Chaos-Equations",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,9 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "preview": "vite preview"
+    "test": "vitest run"
   },
   "dependencies": {
     "@react-three/drei": "^10.0.5",
@@ -22,19 +19,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
-    "typescript": "~5.7.2",
-    "typescript-eslint": "^8.24.1",
     "vite": "^8.0.16",
     "vitest": "^4.1.8"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.9.5"
+    "@rollup/rollup-linux-x64-gnu": "*"
   }
 }
